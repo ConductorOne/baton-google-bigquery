@@ -3,7 +3,7 @@ module github.com/conductorone/baton-google-bigquery
 go 1.22.2
 
 require (
-	github.com/conductorone/baton-sdk v0.1.32
+	github.com/conductorone/baton-sdk v0.1.33
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	go.uber.org/zap v1.27.0
 )
