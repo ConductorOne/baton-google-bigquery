@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"cloud.google.com/go/bigquery"
@@ -9,6 +10,7 @@ import (
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
+	"google.golang.org/api/option"
 )
 
 type GoogleBigQuery struct {
@@ -19,7 +21,7 @@ type GoogleBigQuery struct {
 // ResourceSyncers returns a ResourceSyncer for each resource type that should be synced from the upstream service.
 func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
 	return []connectorbuilder.ResourceSyncer{
-		newUserBuilder(),
+		newUserBuilder(d.ProjectsClient, d.BigQueryClient),
 	}
 }
 
@@ -40,10 +42,28 @@ func (d *GoogleBigQuery) Metadata(ctx context.Context) (*v2.ConnectorMetadata, e
 // Validate is called to ensure that the connector is properly configured. It should exercise any API credentials
 // to be sure that they are valid.
 func (d *GoogleBigQuery) Validate(ctx context.Context) (annotations.Annotations, error) {
+	if projectId := d.BigQueryClient.Project(); projectId == "" {
+		return nil, fmt.Errorf("project id is empty")
+	}
+
 	return nil, nil
 }
 
 // New returns a new instance of the connector.
-func New(ctx context.Context) (*GoogleBigQuery, error) {
-	return &GoogleBigQuery{}, nil
+func New(ctx context.Context, credentialsJSONFilePath string) (*GoogleBigQuery, error) {
+	opt := option.WithCredentialsFile(credentialsJSONFilePath)
+	projectsClient, err := resourcemanager.NewProjectsClient(ctx, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	bigQueryClient, err := bigquery.NewClient(ctx, bigquery.DetectProjectID, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GoogleBigQuery{
+		ProjectsClient: projectsClient,
+		BigQueryClient: bigQueryClient,
+	}, nil
 }

@@ -17,3 +17,5 @@
 dist/
 
 .env
+
+baton-connector-2_key.json
