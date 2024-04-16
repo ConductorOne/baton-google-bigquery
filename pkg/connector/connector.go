@@ -22,6 +22,7 @@ type GoogleBigQuery struct {
 func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
 	return []connectorbuilder.ResourceSyncer{
 		newUserBuilder(d.ProjectsClient, d.BigQueryClient),
+		newServiceAccountBuilder(d.ProjectsClient, d.BigQueryClient),
 	}
 }
 
