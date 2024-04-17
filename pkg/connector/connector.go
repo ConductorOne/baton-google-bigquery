@@ -23,6 +23,7 @@ func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder
 	return []connectorbuilder.ResourceSyncer{
 		newUserBuilder(d.ProjectsClient, d.BigQueryClient),
 		newServiceAccountBuilder(d.ProjectsClient, d.BigQueryClient),
+		newRoleBuilder(d.ProjectsClient, d.BigQueryClient),
 	}
 }
 

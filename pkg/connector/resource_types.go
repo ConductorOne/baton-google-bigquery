@@ -9,11 +9,19 @@ var (
 	userResourceType = &v2.ResourceType{
 		Id:          "user",
 		DisplayName: "User",
+		Description: "User of Google Cloud Platform",
 		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_USER},
 	}
 	serviceAccountResourceType = &v2.ResourceType{
 		Id:          "service_account",
 		DisplayName: "Service Account",
+		Description: "Service Account of Google Cloud Platform",
 		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_APP},
+	}
+	roleResourceType = &v2.ResourceType{
+		Id:          "role",
+		DisplayName: "Role",
+		Description: "Roles of Google BigQuery",
+		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_ROLE},
 	}
 )
