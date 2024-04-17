@@ -3,11 +3,14 @@ package connector
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"cloud.google.com/go/bigquery"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
+	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
+	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"google.golang.org/api/iterator"
 )
@@ -16,6 +19,11 @@ type datasetBuilder struct {
 	resourceType   *v2.ResourceType
 	bigQueryClient *bigquery.Client
 }
+
+const (
+	ownedEntitlement         = "owned"
+	bigQueryDatasetOwnerRole = "OWNER"
+)
 
 func (o *datasetBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return datasetResourceType
@@ -62,11 +70,39 @@ func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 }
 
 func (o *datasetBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
-	return nil, "", nil, nil
+	var rv []*v2.Entitlement
+
+	assigmentOptions := []ent.EntitlementOption{
+		ent.WithGrantableTo(userResourceType),
+		ent.WithDescription(fmt.Sprintf("Owns %s dataset", resource.DisplayName)),
+		ent.WithDisplayName(fmt.Sprintf("%s dataset %s", resource.DisplayName, ownedEntitlement)),
+	}
+	rv = append(rv, ent.NewAssignmentEntitlement(resource, ownedEntitlement, assigmentOptions...))
+
+	return rv, "", nil, nil
 }
 
 func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
-	return nil, "", nil, nil
+	dataset, err := o.bigQueryClient.Dataset(resource.Id.Resource).Metadata(ctx)
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	var grants []*v2.Grant
+	for _, access := range dataset.Access {
+		if access.Role != bigQueryDatasetOwnerRole || access.EntityType != bigquery.UserEmailEntity {
+			continue
+		}
+
+		userResource, err := userResource(access.Entity)
+		if err != nil {
+			return nil, "", nil, err
+		}
+
+		grants = append(grants, grant.NewGrant(resource, ownedEntitlement, userResource.Id))
+	}
+
+	return grants, "", nil, nil
 }
 
 func newDatasetBuilder(bigQueryClient *bigquery.Client) *datasetBuilder {
