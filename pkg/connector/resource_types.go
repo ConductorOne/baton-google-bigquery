@@ -24,4 +24,10 @@ var (
 		Description: "Roles of Google BigQuery",
 		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_ROLE},
 	}
+	datasetResourceType = &v2.ResourceType{
+		Id:          "dataset",
+		DisplayName: "Dataset",
+		Description: "Dataset of Google BigQuery",
+		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_APP},
+	}
 )
