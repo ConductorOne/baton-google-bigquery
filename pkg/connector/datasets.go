@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/bigquery"
+	"cloud.google.com/go/iam/apiv1/iampb"
+	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
@@ -18,11 +20,42 @@ import (
 type datasetBuilder struct {
 	resourceType   *v2.ResourceType
 	bigQueryClient *bigquery.Client
+	projectsClient *resourcemanager.ProjectsClient
 }
 
 const (
-	ownedEntitlement         = "owned"
-	bigQueryDatasetOwnerRole = "OWNER"
+	ownerEntitlement  = "owner"
+	writerEntitlement = "writer"
+	viewerEntitlement = "viewer"
+	accessEntitlement = "access"
+)
+
+var (
+	/*
+		API returns legacy roles for the dataset access. We need to map them to the new roles.
+		See: https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets
+		An IAM role ID that should be granted to the user, group, or domain specified in this access entry.
+		The following legacy mappings will be applied:
+		OWNER <=> roles/bigquery.dataOwner
+		WRITER <=> roles/bigquery.dataEditor
+		READER <=> roles/bigquery.dataViewer
+		This field will accept any of the above formats, but will return only the legacy format. For example,
+		if you set this field to "roles/bigquery.dataOwner", it will be returned back as "OWNER".
+	*/
+	ownerRole      = string(bigquery.OwnerRole)
+	readerRole     = string(bigquery.ReaderRole)
+	writerRole     = string(bigquery.WriterRole)
+	legacyRolesMap = map[string]string{
+		ownerRole:  "roles/bigquery.dataOwner", // TODO: remove roles/ prefix
+		readerRole: "roles/bigquery.dataEditor",
+		writerRole: "roles/bigquery.dataViewer",
+	}
+	legacyRolesToEntitlementsMap = map[string]string{
+		ownerRole:  ownerEntitlement,
+		readerRole: writerEntitlement,
+		writerRole: viewerEntitlement,
+	}
+	datasetEntitlements = []string{ownerEntitlement, writerEntitlement, viewerEntitlement}
 )
 
 func (o *datasetBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
@@ -72,12 +105,33 @@ func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 func (o *datasetBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
 	var rv []*v2.Entitlement
 
-	assigmentOptions := []ent.EntitlementOption{
-		ent.WithGrantableTo(userResourceType),
-		ent.WithDescription(fmt.Sprintf("Owns %s dataset", resource.DisplayName)),
-		ent.WithDisplayName(fmt.Sprintf("%s dataset %s", resource.DisplayName, ownedEntitlement)),
+	var entitlementToVerbMap = map[string]string{
+		ownerEntitlement:  "Owns",
+		writerEntitlement: "Can write to",
+		viewerEntitlement: "Can view",
 	}
-	rv = append(rv, ent.NewAssignmentEntitlement(resource, ownedEntitlement, assigmentOptions...))
+	for _, datasetEntitlement := range datasetEntitlements {
+		assigmentOptions := []ent.EntitlementOption{
+			ent.WithGrantableTo(userResourceType),
+			ent.WithDescription(fmt.Sprintf("%s %s dataset", entitlementToVerbMap[datasetEntitlement], resource.DisplayName)),
+			ent.WithDisplayName(fmt.Sprintf("%s dataset %s", resource.DisplayName, datasetEntitlement)),
+		}
+		rv = append(rv, ent.NewPermissionEntitlement(resource, datasetEntitlement, assigmentOptions...))
+
+		assigmentOptions = []ent.EntitlementOption{
+			ent.WithGrantableTo(serviceAccountResourceType),
+			ent.WithDescription(fmt.Sprintf("%s %s dataset", entitlementToVerbMap[datasetEntitlement], resource.DisplayName)),
+			ent.WithDisplayName(fmt.Sprintf("%s dataset %s", resource.DisplayName, datasetEntitlement)),
+		}
+		rv = append(rv, ent.NewPermissionEntitlement(resource, datasetEntitlement, assigmentOptions...))
+	}
+
+	assigmentOptions := []ent.EntitlementOption{
+		ent.WithGrantableTo(roleResourceType),
+		ent.WithDescription(fmt.Sprintf("has access to %s dataset", resource.DisplayName)),
+		ent.WithDisplayName(fmt.Sprintf("%s dataset %s", resource.DisplayName, accessEntitlement)),
+	}
+	rv = append(rv, ent.NewAssignmentEntitlement(resource, accessEntitlement, assigmentOptions...))
 
 	return rv, "", nil, nil
 }
@@ -88,26 +142,85 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 		return nil, "", nil, err
 	}
 
+	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
+		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
+	})
+	if err != nil {
+		return nil, "", nil, err // TODO: wrap error
+	}
+
 	var grants []*v2.Grant
 	for _, access := range dataset.Access {
-		if access.Role != bigQueryDatasetOwnerRole || access.EntityType != bigquery.UserEmailEntity {
-			continue
-		}
-
-		userResource, err := userResource(access.Entity)
+		g, err := o.GetUserOwnerGrants(resource, access) // TODO: think about this again
 		if err != nil {
 			return nil, "", nil, err
 		}
+		grants = append(grants, g...)
 
-		grants = append(grants, grant.NewGrant(resource, ownedEntitlement, userResource.Id))
+		stringLegacyRoleValue := string(access.Role)
+		role, exists := legacyRolesMap[stringLegacyRoleValue]
+		if !exists {
+			return nil, "", nil, fmt.Errorf("role for legacy role %s not found", stringLegacyRoleValue)
+		}
+
+		e, exists := legacyRolesToEntitlementsMap[stringLegacyRoleValue]
+		if !exists {
+			return nil, "", nil, fmt.Errorf("entitlement for legacy role %s not found", stringLegacyRoleValue)
+		}
+
+		for _, binding := range policy.Bindings {
+			if binding.Role != role {
+				continue
+			}
+
+			roleResource, err := roleResource(binding.Role)
+			if err != nil {
+				return nil, "", nil, err
+			}
+			grants = append(grants, grant.NewGrant(resource, accessEntitlement, roleResource.Id))
+
+			for _, member := range binding.Members {
+				if isUser, user := isUser(member); isUser {
+					userResource, err := userResource(user)
+					if err != nil {
+						return nil, "", nil, err
+					}
+
+					grants = append(grants, grant.NewGrant(resource, e, userResource.Id))
+				} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
+					serviceAccountResource, err := serviceAccountResource(serviceAccount)
+					if err != nil {
+						return nil, "", nil, err
+					}
+
+					grants = append(grants, grant.NewGrant(resource, e, serviceAccountResource.Id))
+				}
+			}
+		}
 	}
 
 	return grants, "", nil, nil
 }
 
-func newDatasetBuilder(bigQueryClient *bigquery.Client) *datasetBuilder {
+func (o *datasetBuilder) GetUserOwnerGrants(resource *v2.Resource, access *bigquery.AccessEntry) ([]*v2.Grant, error) {
+	if access.Role != bigquery.OwnerRole || access.EntityType != bigquery.UserEmailEntity {
+		return []*v2.Grant{}, nil
+	}
+
+	userResource, err := userResource(access.Entity)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*v2.Grant{
+		grant.NewGrant(resource, ownerEntitlement, userResource.Id),
+	}, nil
+}
+
+func newDatasetBuilder(bigQueryClient *bigquery.Client, projectsClient *resourcemanager.ProjectsClient) *datasetBuilder {
 	return &datasetBuilder{
 		resourceType:   datasetResourceType,
 		bigQueryClient: bigQueryClient,
+		projectsClient: projectsClient,
 	}
 }

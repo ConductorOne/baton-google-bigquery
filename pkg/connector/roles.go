@@ -29,7 +29,7 @@ func (o *roleBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 
 func roleResource(role string) (*v2.Resource, error) {
 	profile := map[string]interface{}{
-		"name": role,
+		"name": role, // TODO: trim roles/ prefix
 	}
 
 	roleTraitOptions := []rs.RoleTraitOption{
