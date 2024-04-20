@@ -3,6 +3,7 @@ package connector
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/iam/apiv1/iampb"
@@ -28,15 +29,17 @@ func (o *roleBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 }
 
 func roleResource(role string) (*v2.Resource, error) {
+	roleName := removeRolesPrefix(role)
+
 	profile := map[string]interface{}{
-		"name": role, // TODO: trim roles/ prefix
+		"name": roleName,
 	}
 
 	roleTraitOptions := []rs.RoleTraitOption{
 		rs.WithRoleProfile(profile),
 	}
 
-	resource, err := rs.NewRoleResource(role, roleResourceType, role, roleTraitOptions)
+	resource, err := rs.NewRoleResource(roleName, roleResourceType, role, roleTraitOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -44,19 +47,23 @@ func roleResource(role string) (*v2.Resource, error) {
 	return resource, nil
 }
 
+func removeRolesPrefix(role string) string {
+	return strings.TrimPrefix(role, "roles/")
+}
+
 func (o *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
 	if err != nil {
-		return nil, "", nil, err // TODO: wrap error
+		return nil, "", nil, wrapError(err, "failed to get IAM policy")
 	}
 
 	var resources []*v2.Resource
 	for _, binding := range policy.Bindings {
 		resource, err := roleResource(binding.Role)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", nil, wrapError(err, "failed to create role resource")
 		}
 
 		resources = append(resources, resource)
@@ -90,7 +97,7 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
 	if err != nil {
-		return nil, "", nil, err // TODO: wrap error
+		return nil, "", nil, wrapError(err, "failed to get IAM policy")
 	}
 
 	var grants []*v2.Grant
@@ -103,14 +110,14 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 			if isUser, user := isUser(member); isUser {
 				userResource, err := userResource(user)
 				if err != nil {
-					return nil, "", nil, err
+					return nil, "", nil, wrapError(err, "failed to create user resource")
 				}
 
 				grants = append(grants, grant.NewGrant(resource, assignedEntitlement, userResource.Id))
 			} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
 				serviceAccountResource, err := serviceAccountResource(serviceAccount)
 				if err != nil {
-					return nil, "", nil, err
+					return nil, "", nil, wrapError(err, "failed to create service account resource")
 				}
 
 				grants = append(grants, grant.NewGrant(resource, assignedEntitlement, serviceAccountResource.Id))

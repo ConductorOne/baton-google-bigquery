@@ -46,7 +46,7 @@ var (
 	readerRole     = string(bigquery.ReaderRole)
 	writerRole     = string(bigquery.WriterRole)
 	legacyRolesMap = map[string]string{
-		ownerRole:  "roles/bigquery.dataOwner", // TODO: remove roles/ prefix
+		ownerRole:  "roles/bigquery.dataOwner",
 		readerRole: "roles/bigquery.dataEditor",
 		writerRole: "roles/bigquery.dataViewer",
 	}
@@ -88,12 +88,12 @@ func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 			break
 		}
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", nil, wrapError(err, "Unable to fetch dataset")
 		}
 
 		resource, err := datasetResource(dataset.DatasetID)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", nil, wrapError(err, "Unable to create dataset resource")
 		}
 
 		resources = append(resources, resource)
@@ -139,33 +139,35 @@ func (o *datasetBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	dataset, err := o.bigQueryClient.Dataset(resource.Id.Resource).Metadata(ctx)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, "", nil, wrapError(err, "Unable to fetch dataset metadata")
 	}
 
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
 	if err != nil {
-		return nil, "", nil, err // TODO: wrap error
+		return nil, "", nil, wrapError(err, "Unable to fetch IAM policy for project")
 	}
 
 	var grants []*v2.Grant
 	for _, access := range dataset.Access {
-		g, err := o.GetUserOwnerGrants(resource, access) // TODO: think about this again
-		if err != nil {
-			return nil, "", nil, err
+		if access.Role == bigquery.OwnerRole || access.EntityType == bigquery.UserEmailEntity {
+			g, err := o.GetUserOwnerGrants(resource, access)
+			if err != nil {
+				return nil, "", nil, err
+			}
+			grants = append(grants, g...)
 		}
-		grants = append(grants, g...)
 
 		stringLegacyRoleValue := string(access.Role)
 		role, exists := legacyRolesMap[stringLegacyRoleValue]
 		if !exists {
-			return nil, "", nil, fmt.Errorf("role for legacy role %s not found", stringLegacyRoleValue)
+			return nil, "", nil, wrapError(fmt.Errorf("role for legacy role %s not found", stringLegacyRoleValue), "")
 		}
 
 		e, exists := legacyRolesToEntitlementsMap[stringLegacyRoleValue]
 		if !exists {
-			return nil, "", nil, fmt.Errorf("entitlement for legacy role %s not found", stringLegacyRoleValue)
+			return nil, "", nil, wrapError(fmt.Errorf("entitlement for legacy role %s not found", stringLegacyRoleValue), "")
 		}
 
 		for _, binding := range policy.Bindings {
@@ -173,24 +175,24 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 				continue
 			}
 
-			roleResource, err := roleResource(binding.Role)
+			g, err := o.GetRoleGrants(resource, role)
 			if err != nil {
 				return nil, "", nil, err
 			}
-			grants = append(grants, grant.NewGrant(resource, accessEntitlement, roleResource.Id))
+			grants = append(grants, g...)
 
 			for _, member := range binding.Members {
 				if isUser, user := isUser(member); isUser {
 					userResource, err := userResource(user)
 					if err != nil {
-						return nil, "", nil, err
+						return nil, "", nil, wrapError(err, "Unable to create user resource")
 					}
 
 					grants = append(grants, grant.NewGrant(resource, e, userResource.Id))
 				} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
 					serviceAccountResource, err := serviceAccountResource(serviceAccount)
 					if err != nil {
-						return nil, "", nil, err
+						return nil, "", nil, wrapError(err, "Unable to create service account resource")
 					}
 
 					grants = append(grants, grant.NewGrant(resource, e, serviceAccountResource.Id))
@@ -203,10 +205,6 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 }
 
 func (o *datasetBuilder) GetUserOwnerGrants(resource *v2.Resource, access *bigquery.AccessEntry) ([]*v2.Grant, error) {
-	if access.Role != bigquery.OwnerRole || access.EntityType != bigquery.UserEmailEntity {
-		return []*v2.Grant{}, nil
-	}
-
 	userResource, err := userResource(access.Entity)
 	if err != nil {
 		return nil, err
@@ -214,6 +212,17 @@ func (o *datasetBuilder) GetUserOwnerGrants(resource *v2.Resource, access *bigqu
 
 	return []*v2.Grant{
 		grant.NewGrant(resource, ownerEntitlement, userResource.Id),
+	}, nil
+}
+
+func (o *datasetBuilder) GetRoleGrants(resource *v2.Resource, role string) ([]*v2.Grant, error) {
+	roleResource, err := roleResource(role)
+	if err != nil {
+		return nil, wrapError(err, "Unable to create role resource")
+	}
+
+	return []*v2.Grant{
+		grant.NewGrant(resource, accessEntitlement, roleResource.Id),
 	}, nil
 }
 

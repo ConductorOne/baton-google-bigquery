@@ -48,7 +48,7 @@ func (o *serviceAccountBuilder) List(ctx context.Context, parentResourceID *v2.R
 		Resource: fmt.Sprintf("projects/%s", o.BigQueryClient.Project()),
 	})
 	if err != nil {
-		return nil, "", nil, err // TODO: wrap error
+		return nil, "", nil, wrapError(err, "failed to get IAM policy")
 	}
 
 	var resources []*v2.Resource
@@ -61,7 +61,7 @@ func (o *serviceAccountBuilder) List(ctx context.Context, parentResourceID *v2.R
 
 			resource, err := serviceAccountResource(member)
 			if err != nil {
-				return nil, "", nil, err // TODO: wrap error
+				return nil, "", nil, wrapError(err, "failed to create service account resource")
 			}
 
 			resources = append(resources, resource)

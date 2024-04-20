@@ -50,7 +50,7 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		Resource: fmt.Sprintf("projects/%s", o.BigQueryClient.Project()),
 	})
 	if err != nil {
-		return nil, "", nil, err // TODO: wrap error
+		return nil, "", nil, wrapError(err, "failed to get IAM policy")
 	}
 
 	var resources []*v2.Resource
@@ -63,7 +63,7 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 
 			resource, err := userResource(member)
 			if err != nil {
-				return nil, "", nil, err // TODO: wrap error
+				return nil, "", nil, wrapError(err, "failed to create user resource")
 			}
 
 			resources = append(resources, resource)
