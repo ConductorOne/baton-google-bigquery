@@ -107,6 +107,7 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 		}
 
 		for _, member := range binding.Members {
+			// TODO: handle group bindings
 			if isUser, user := isUser(member); isUser {
 				userResource, err := userResource(user)
 				if err != nil {
