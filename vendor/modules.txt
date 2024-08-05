@@ -198,7 +198,7 @@ github.com/aws/smithy-go/waiter
 # github.com/benbjohnson/clock v1.3.5
 ## explicit; go 1.15
 github.com/benbjohnson/clock
-# github.com/conductorone/baton-sdk v0.1.38
+# github.com/conductorone/baton-sdk v0.2.13
 ## explicit; go 1.21
 github.com/conductorone/baton-sdk/internal/connector
 github.com/conductorone/baton-sdk/pb/c1/c1z/v1
@@ -220,13 +220,16 @@ github.com/conductorone/baton-sdk/pkg/dotc1z
 github.com/conductorone/baton-sdk/pkg/dotc1z/manager
 github.com/conductorone/baton-sdk/pkg/dotc1z/manager/local
 github.com/conductorone/baton-sdk/pkg/dotc1z/manager/s3
+github.com/conductorone/baton-sdk/pkg/field
 github.com/conductorone/baton-sdk/pkg/helpers
 github.com/conductorone/baton-sdk/pkg/logging
+github.com/conductorone/baton-sdk/pkg/metrics
 github.com/conductorone/baton-sdk/pkg/pagination
 github.com/conductorone/baton-sdk/pkg/provisioner
 github.com/conductorone/baton-sdk/pkg/ratelimit
 github.com/conductorone/baton-sdk/pkg/sdk
 github.com/conductorone/baton-sdk/pkg/sync
+github.com/conductorone/baton-sdk/pkg/sync/expand
 github.com/conductorone/baton-sdk/pkg/tasks
 github.com/conductorone/baton-sdk/pkg/tasks/c1api
 github.com/conductorone/baton-sdk/pkg/tasks/local
@@ -234,14 +237,19 @@ github.com/conductorone/baton-sdk/pkg/types
 github.com/conductorone/baton-sdk/pkg/types/entitlement
 github.com/conductorone/baton-sdk/pkg/types/grant
 github.com/conductorone/baton-sdk/pkg/types/resource
+github.com/conductorone/baton-sdk/pkg/types/tasks
 github.com/conductorone/baton-sdk/pkg/types/ticket
 github.com/conductorone/baton-sdk/pkg/ugrpc
 github.com/conductorone/baton-sdk/pkg/uhttp
 github.com/conductorone/baton-sdk/pkg/us3
 github.com/conductorone/baton-sdk/pkg/utls
+# github.com/deckarep/golang-set/v2 v2.6.0
+## explicit; go 1.18
+github.com/deckarep/golang-set/v2
 # github.com/doug-martin/goqu/v9 v9.19.0
 ## explicit; go 1.12
 github.com/doug-martin/goqu/v9
+github.com/doug-martin/goqu/v9/dialect/sqlite3
 github.com/doug-martin/goqu/v9/exec
 github.com/doug-martin/goqu/v9/exp
 github.com/doug-martin/goqu/v9/internal/errors
@@ -515,7 +523,7 @@ go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc/inte
 ## explicit; go 1.21
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp/internal/semconvutil
-# go.opentelemetry.io/otel v1.25.0
+# go.opentelemetry.io/otel v1.27.0
 ## explicit; go 1.21
 go.opentelemetry.io/otel
 go.opentelemetry.io/otel/attribute
@@ -528,12 +536,12 @@ go.opentelemetry.io/otel/internal/global
 go.opentelemetry.io/otel/propagation
 go.opentelemetry.io/otel/semconv/v1.17.0
 go.opentelemetry.io/otel/semconv/v1.20.0
-# go.opentelemetry.io/otel/metric v1.25.0
+# go.opentelemetry.io/otel/metric v1.27.0
 ## explicit; go 1.21
 go.opentelemetry.io/otel/metric
 go.opentelemetry.io/otel/metric/embedded
 go.opentelemetry.io/otel/metric/noop
-# go.opentelemetry.io/otel/trace v1.25.0
+# go.opentelemetry.io/otel/trace v1.27.0
 ## explicit; go 1.21
 go.opentelemetry.io/otel/trace
 go.opentelemetry.io/otel/trace/embedded
@@ -554,7 +562,7 @@ go.uber.org/zap/internal/exit
 go.uber.org/zap/internal/pool
 go.uber.org/zap/internal/stacktrace
 go.uber.org/zap/zapcore
-# golang.org/x/crypto v0.23.0
+# golang.org/x/crypto v0.24.0
 ## explicit; go 1.18
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/chacha20
@@ -579,12 +587,12 @@ golang.org/x/exp/slices
 golang.org/x/exp/slog
 golang.org/x/exp/slog/internal
 golang.org/x/exp/slog/internal/buffer
-# golang.org/x/mod v0.17.0
+# golang.org/x/mod v0.18.0
 ## explicit; go 1.18
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.25.0
+# golang.org/x/net v0.26.0
 ## explicit; go 1.18
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -609,7 +617,7 @@ golang.org/x/oauth2/jwt
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.20.0
+# golang.org/x/sys v0.21.0
 ## explicit; go 1.18
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
@@ -619,7 +627,7 @@ golang.org/x/sys/windows/svc
 golang.org/x/sys/windows/svc/debug
 golang.org/x/sys/windows/svc/eventlog
 golang.org/x/sys/windows/svc/mgr
-# golang.org/x/text v0.15.0
+# golang.org/x/text v0.16.0
 ## explicit; go 1.18
 golang.org/x/text/encoding
 golang.org/x/text/encoding/internal
@@ -634,7 +642,7 @@ golang.org/x/text/unicode/norm
 # golang.org/x/time v0.5.0
 ## explicit; go 1.18
 golang.org/x/time/rate
-# golang.org/x/tools v0.21.0
+# golang.org/x/tools v0.22.0
 ## explicit; go 1.19
 golang.org/x/tools/cmd/goimports
 golang.org/x/tools/cmd/stringer
