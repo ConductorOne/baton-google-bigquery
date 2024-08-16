@@ -67,12 +67,14 @@ Available Commands:
 Flags:
       --client-id string                    The client ID used to authenticate with ConductorOne ($BATON_CLIENT_ID)
       --client-secret string                The client secret used to authenticate with ConductorOne ($BATON_CLIENT_SECRET)
-      --credentials-json-file-path string   JSON credentials file name for the Google identity platform account. ($BATON_CREDENTIALS_JSON_FILE_PATH)
+      --credentials-json-file-path string   required: JSON credentials file name for the Google identity platform account. ($BATON_CREDENTIALS_JSON_FILE_PATH)
   -f, --file string                         The path to the c1z file to sync with ($BATON_FILE) (default "sync.c1z")
   -h, --help                                help for baton-google-bigquery
       --log-format string                   The output format for logs: json, console ($BATON_LOG_FORMAT) (default "json")
       --log-level string                    The log level: debug, info, warn, error ($BATON_LOG_LEVEL) (default "info")
-  -p, --provisioning                        This must be set in order for provisioning actions to be enabled. ($BATON_PROVISIONING)
+  -p, --provisioning                        This must be set in order for provisioning actions to be enabled ($BATON_PROVISIONING)
+      --skip-full-sync                      This must be set to skip a full sync ($BATON_SKIP_FULL_SYNC)
+      --ticketing                           This must be set to enable ticketing support ($BATON_TICKETING)
   -v, --version                             version for baton-google-bigquery
 
 Use "baton-google-bigquery [command] --help" for more information about a command.
