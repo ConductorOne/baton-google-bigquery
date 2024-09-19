@@ -55,12 +55,22 @@ func (d *GoogleBigQuery) Validate(ctx context.Context) (annotations.Annotations,
 // New returns a new instance of the connector.
 func New(ctx context.Context, credentialsJSONFilePath string) (*GoogleBigQuery, error) {
 	opt := option.WithCredentialsFile(credentialsJSONFilePath)
-	projectsClient, err := resourcemanager.NewProjectsClient(ctx, opt)
+
+	return createClient(ctx, opt)
+}
+
+func NewFromJSONBytes(ctx context.Context, credentialsJSON []byte) (*GoogleBigQuery, error) {
+	opt := option.WithCredentialsJSON(credentialsJSON)
+
+	return createClient(ctx, opt)
+}
+func createClient(ctx context.Context, opts ...option.ClientOption) (*GoogleBigQuery, error) {
+	projectsClient, err := resourcemanager.NewProjectsClient(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	bigQueryClient, err := bigquery.NewClient(ctx, bigquery.DetectProjectID, opt)
+	bigQueryClient, err := bigquery.NewClient(ctx, bigquery.DetectProjectID, opts...)
 	if err != nil {
 		return nil, err
 	}
