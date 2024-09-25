@@ -56,7 +56,7 @@ func TestUserBuilderList(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func TestCreateDatasets(t *testing.T) {
+func TestCreateDataset(t *testing.T) {
 	if jsonFilePath == "" {
 		t.Skip()
 	}
@@ -69,5 +69,18 @@ func TestCreateDatasets(t *testing.T) {
 	}
 
 	err = cliTest.BigQueryClient.Dataset("localdataset").Create(ctxTest, meta)
+	require.Nil(t, err)
+}
+
+func TestDeleteDataset(t *testing.T) {
+	if jsonFilePath == "" {
+		t.Skip()
+	}
+
+	cliTest, err := getClientForTesting(ctxTest)
+	require.Nil(t, err)
+
+	// Delete the dataset. Delete will fail if the dataset is not empty.
+	err = cliTest.BigQueryClient.Dataset("localdataset").Delete(ctxTest)
 	require.Nil(t, err)
 }
