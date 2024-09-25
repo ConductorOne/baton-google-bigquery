@@ -46,6 +46,8 @@ jobs:
       BATON_ENTITLEMENT: 'entitlement:group:1234:member'
       BATON_PRINCIPAL: 'user:9876'
       BATON_PRINCIPAL_TYPE: 'user'
+      BATON: baton
+      BATON_TAILSCALE: ./baton-tailscale
     steps:
       - name: Install Go
         uses: actions/setup-go@v4
