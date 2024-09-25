@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"cloud.google.com/go/bigquery"
@@ -11,10 +12,8 @@ import (
 )
 
 var (
-	// jsonFilePath = os.Get env("BATON_CREDENTIALS_JSON_FILE_PATH")
+	jsonFilePath = os.Getenv("BATON_CREDENTIALS_JSON_FILE_PATH")
 	ctxTest      = context.Background()
-	jsonFilePath = "../../c2.json"
-	// jsonFilePath = "../../insulator-gcp-cred.json"
 )
 
 func TestDatasetBuilderList(t *testing.T) {
