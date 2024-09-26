@@ -47,7 +47,7 @@ jobs:
       BATON_PRINCIPAL: 'user:9876'
       BATON_PRINCIPAL_TYPE: 'user'
       BATON: baton
-      BATON_TAILSCALE: ./baton-tailscale
+      BATON_TAILSCALE: ./baton-google-bigquery
     steps:
       - name: Install Go
         uses: actions/setup-go@v4

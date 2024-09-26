@@ -84,3 +84,40 @@ func TestDeleteDataset(t *testing.T) {
 	err = cliTest.BigQueryClient.Dataset("localdataset").Delete(ctxTest)
 	require.Nil(t, err)
 }
+
+func TestRoleBuilderList(t *testing.T) {
+	if jsonFilePath == "" {
+		t.Skip()
+	}
+
+	cliTest, err := getClientForTesting(ctxTest)
+	require.Nil(t, err)
+
+	u := &roleBuilder{
+		resourceType:   datasetResourceType,
+		bigQueryClient: cliTest.BigQueryClient,
+		projectsClient: cliTest.ProjectsClient,
+	}
+
+	_, _, _, err = u.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})
+	require.Nil(t, err)
+}
+
+func TestDatasetGrants(t *testing.T) {
+	if jsonFilePath == "" {
+		t.Skip()
+	}
+
+	cliTest, err := getClientForTesting(ctxTest)
+	require.Nil(t, err)
+
+	d := &datasetBuilder{
+		resourceType:   datasetResourceType,
+		bigQueryClient: cliTest.BigQueryClient,
+		projectsClient: cliTest.ProjectsClient,
+	}
+	_, _, _, err = d.Grants(ctxTest, &v2.Resource{
+		Id: &v2.ResourceId{ResourceType: datasetResourceType.Id, Resource: "localdataset"},
+	}, &pagination.Token{})
+	require.Nil(t, err)
+}
