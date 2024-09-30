@@ -1,20 +1,60 @@
 {
-  "@type": "type.googleapis.com/c1.connector.v2.ConnectorCapabilities",
-  "resourceTypeCapabilities": [
+  "@type":  "type.googleapis.com/c1.connector.v2.ConnectorCapabilities",
+  "resourceTypeCapabilities":  [
     {
-      "resourceType": {
-        "id": "user",
-        "displayName": "User",
-        "traits": [
-          "TRAIT_USER"
-        ]
+      "resourceType":  {
+        "id":  "dataset",
+        "displayName":  "Dataset",
+        "traits":  [
+          "TRAIT_APP"
+        ],
+        "description":  "Dataset of Google BigQuery"
       },
-      "capabilities": [
+      "capabilities":  [
+        "CAPABILITY_SYNC"
+      ]
+    },
+    {
+      "resourceType":  {
+        "id":  "role",
+        "displayName":  "Role",
+        "traits":  [
+          "TRAIT_ROLE"
+        ],
+        "description":  "Roles of Google BigQuery"
+      },
+      "capabilities":  [
+        "CAPABILITY_SYNC"
+      ]
+    },
+    {
+      "resourceType":  {
+        "id":  "service_account",
+        "displayName":  "Service Account",
+        "traits":  [
+          "TRAIT_APP"
+        ],
+        "description":  "Service Account of Google Cloud Platform"
+      },
+      "capabilities":  [
+        "CAPABILITY_SYNC"
+      ]
+    },
+    {
+      "resourceType":  {
+        "id":  "user",
+        "displayName":  "User",
+        "traits":  [
+          "TRAIT_USER"
+        ],
+        "description":  "User of Google Cloud Platform"
+      },
+      "capabilities":  [
         "CAPABILITY_SYNC"
       ]
     }
   ],
-  "connectorCapabilities": [
+  "connectorCapabilities":  [
     "CAPABILITY_SYNC"
   ]
 }
