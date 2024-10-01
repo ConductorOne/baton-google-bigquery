@@ -47,24 +47,26 @@ func (o *serviceAccountBuilder) List(ctx context.Context, parentResourceID *v2.R
 	policy, err := o.ProjectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.BigQueryClient.Project()),
 	})
-	if err != nil {
-		return nil, "", nil, wrapError(err, "failed to get IAM policy")
+	if !isAuthenticationError(ctx, err) {
+		return nil, "", nil, wrapError(err, "listing service accounts failed")
 	}
 
 	var resources []*v2.Resource
-	for _, binding := range policy.Bindings {
-		for _, member := range binding.Members {
-			isServiceAccount, member := isServiceAccount(member)
-			if !isServiceAccount {
-				continue
-			}
+	if policy != nil {
+		for _, binding := range policy.Bindings {
+			for _, member := range binding.Members {
+				isServiceAccount, member := isServiceAccount(member)
+				if !isServiceAccount {
+					continue
+				}
 
-			resource, err := serviceAccountResource(member)
-			if err != nil {
-				return nil, "", nil, wrapError(err, "failed to create service account resource")
-			}
+				resource, err := serviceAccountResource(member)
+				if err != nil {
+					return nil, "", nil, wrapError(err, "failed to create service account resource")
+				}
 
-			resources = append(resources, resource)
+				resources = append(resources, resource)
+			}
 		}
 	}
 

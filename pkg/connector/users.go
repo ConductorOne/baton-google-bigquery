@@ -50,23 +50,27 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		Resource: fmt.Sprintf("projects/%s", o.BigQueryClient.Project()),
 	})
 	if err != nil {
-		return nil, "", nil, wrapError(err, "failed to get IAM policy")
+		if !isAuthenticationError(ctx, err) {
+			return nil, "", nil, wrapError(err, "listing users failed")
+		}
 	}
 
 	var resources []*v2.Resource
-	for _, binding := range policy.Bindings {
-		for _, member := range binding.Members {
-			isUser, member := isUser(member)
-			if !isUser {
-				continue
-			}
+	if policy != nil {
+		for _, binding := range policy.Bindings {
+			for _, member := range binding.Members {
+				isUser, member := isUser(member)
+				if !isUser {
+					continue
+				}
 
-			resource, err := userResource(member)
-			if err != nil {
-				return nil, "", nil, wrapError(err, "failed to create user resource")
-			}
+				resource, err := userResource(member)
+				if err != nil {
+					return nil, "", nil, wrapError(err, "failed to create user resource")
+				}
 
-			resources = append(resources, resource)
+				resources = append(resources, resource)
+			}
 		}
 	}
 

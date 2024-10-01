@@ -2,7 +2,6 @@ package connector
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"cloud.google.com/go/bigquery"
@@ -12,8 +11,10 @@ import (
 )
 
 var (
-	jsonFilePath = os.Getenv("BATON_CREDENTIALS_JSON_FILE_PATH")
-	ctxTest      = context.Background()
+	// jsonFilePath = os.Getenv("BATON_CREDENTIALS_JSON_FILE_PATH")
+	ctxTest = context.Background()
+	// jsonFilePath = "../../c2.json"
+	jsonFilePath = "../../c1_skip.json"
 )
 
 func TestDatasetBuilderList(t *testing.T) {
@@ -121,3 +122,63 @@ func TestDatasetGrants(t *testing.T) {
 	}, &pagination.Token{})
 	require.Nil(t, err)
 }
+
+// addMember adds a member to a role binding.
+// func addMember(w io.Writer, policy *iam.Policy, role, member string) {
+// 	for _, binding := range policy.Bindings {
+// 		if binding.Role != role {
+// 			continue
+// 		}
+// 		for _, m := range binding.Members {
+// 			if m != member {
+// 				continue
+// 			}
+// 			fmt.Fprintf(w, "Role %q found. Member already exists.\n", role)
+// 			return
+// 		}
+// 		binding.Members = append(binding.Members, member)
+// 		fmt.Fprintf(w, "Role %q found. Member added.\n", role)
+// 		return
+// 	}
+// 	fmt.Fprintf(w, "Role %q not found. Member not added.\n", role)
+// }
+
+// removeMember removes a member from a role binding.
+// func removeMember(w io.Writer, policy *iam.Policy, role, member string) {
+// 	bindings := policy.Bindings
+// 	bindingIndex, memberIndex := -1, -1
+// 	for bIdx := range bindings {
+// 		if bindings[bIdx].Role != role {
+// 			continue
+// 		}
+// 		bindingIndex = bIdx
+// 		for mIdx := range bindings[bindingIndex].Members {
+// 			if bindings[bindingIndex].Members[mIdx] != member {
+// 				continue
+// 			}
+// 			memberIndex = mIdx
+// 			break
+// 		}
+// 	}
+// 	if bindingIndex == -1 {
+// 		fmt.Fprintf(w, "Role %q not found. Member not removed.\n", role)
+// 		return
+// 	}
+// 	if memberIndex == -1 {
+// 		fmt.Fprintf(w, "Role %q found. Member not found.\n", role)
+// 		return
+// 	}
+
+// 	members := removeIdx(bindings[bindingIndex].Members, memberIndex)
+// 	bindings[bindingIndex].Members = members
+// 	if len(members) == 0 {
+// 		bindings = removeIdx(bindings, bindingIndex)
+// 		policy.Bindings = bindings
+// 	}
+// 	fmt.Fprintf(w, "Role %q found. Member removed.\n", role)
+// }
+
+// removeIdx removes arr[idx] from arr.
+// func removeIdx[T any](arr []T, idx int) []T {
+// 	return append(arr[:idx], arr[idx+1:]...)
+// }
