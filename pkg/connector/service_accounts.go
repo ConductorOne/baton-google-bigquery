@@ -47,7 +47,7 @@ func (o *serviceAccountBuilder) List(ctx context.Context, parentResourceID *v2.R
 	policy, err := o.ProjectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.BigQueryClient.Project()),
 	})
-	if !isAuthenticationError(ctx, err) {
+	if !isPermissionDenied(ctx, err) {
 		return nil, "", nil, wrapError(err, "listing service accounts failed")
 	}
 

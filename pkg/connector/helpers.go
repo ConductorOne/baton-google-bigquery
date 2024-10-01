@@ -20,7 +20,7 @@ func wrapError(err error, message string) error {
 	return fmt.Errorf("google-big-query-connector: %s: %w", message, err)
 }
 
-func isAuthenticationError(ctx context.Context, err error) bool {
+func isPermissionDenied(ctx context.Context, err error) bool {
 	var ae *apierror.APIError
 	l := ctxzap.Extract(ctx)
 	if errors.As(err, &ae) {

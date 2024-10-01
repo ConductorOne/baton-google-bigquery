@@ -50,7 +50,7 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		Resource: fmt.Sprintf("projects/%s", o.BigQueryClient.Project()),
 	})
 	if err != nil {
-		if !isAuthenticationError(ctx, err) {
+		if !isPermissionDenied(ctx, err) {
 			return nil, "", nil, wrapError(err, "listing users failed")
 		}
 	}

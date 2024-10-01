@@ -55,7 +55,7 @@ func (o *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
-	if !isAuthenticationError(ctx, err) {
+	if !isPermissionDenied(ctx, err) {
 		return nil, "", nil, wrapError(err, "listing roles failed")
 	}
 
@@ -98,7 +98,7 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
-	if !isAuthenticationError(ctx, err) {
+	if !isPermissionDenied(ctx, err) {
 		return nil, "", nil, wrapError(err, "listing roles failed")
 	}
 
