@@ -35,7 +35,10 @@ func TestDatasetBuilderList(t *testing.T) {
 }
 
 func getClientForTesting(ctx context.Context) (*GoogleBigQuery, error) {
-	return New(ctx, jsonFilePath)
+	return New(ctx, jsonFilePath, []string{
+		"conductorone-c2",
+		"conductorone-integration",
+	})
 }
 
 func TestUserBuilderList(t *testing.T) {
@@ -47,9 +50,10 @@ func TestUserBuilderList(t *testing.T) {
 	require.Nil(t, err)
 
 	u := &userBuilder{
-		resourceType:   datasetResourceType,
-		BigQueryClient: cliTest.BigQueryClient,
-		ProjectsClient: cliTest.ProjectsClient,
+		resourceType:      datasetResourceType,
+		BigQueryClient:    cliTest.BigQueryClient,
+		ProjectsClient:    cliTest.ProjectsClient,
+		excludeProjectIDs: cliTest.ExcludeProjectIDs,
 	}
 
 	_, _, _, err = u.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})

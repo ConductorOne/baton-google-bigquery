@@ -14,16 +14,17 @@ import (
 )
 
 type GoogleBigQuery struct {
-	ProjectsClient *resourcemanager.ProjectsClient
-	BigQueryClient *bigquery.Client
+	ProjectsClient    *resourcemanager.ProjectsClient
+	BigQueryClient    *bigquery.Client
+	ExcludeProjectIDs []string
 }
 
 // ResourceSyncers returns a ResourceSyncer for each resource type that should be synced from the upstream service.
 func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
 	return []connectorbuilder.ResourceSyncer{
-		newUserBuilder(d.ProjectsClient, d.BigQueryClient),
-		newServiceAccountBuilder(d.ProjectsClient, d.BigQueryClient),
-		newRoleBuilder(d.ProjectsClient, d.BigQueryClient),
+		newUserBuilder(d.ProjectsClient, d.BigQueryClient, d.ExcludeProjectIDs),
+		newServiceAccountBuilder(d.ProjectsClient, d.BigQueryClient, d.ExcludeProjectIDs),
+		newRoleBuilder(d.ProjectsClient, d.BigQueryClient, d.ExcludeProjectIDs),
 		newDatasetBuilder(d.BigQueryClient, d.ProjectsClient),
 	}
 }
@@ -53,18 +54,13 @@ func (d *GoogleBigQuery) Validate(ctx context.Context) (annotations.Annotations,
 }
 
 // New returns a new instance of the connector.
-func New(ctx context.Context, credentialsJSONFilePath string) (*GoogleBigQuery, error) {
+func New(ctx context.Context, credentialsJSONFilePath string, excludeProjectIDs []string) (*GoogleBigQuery, error) {
 	opt := option.WithCredentialsFile(credentialsJSONFilePath)
 
-	return createClient(ctx, opt)
+	return createClient(ctx, excludeProjectIDs, opt)
 }
 
-func NewFromJSONBytes(ctx context.Context, credentialsJSON []byte) (*GoogleBigQuery, error) {
-	opt := option.WithCredentialsJSON(credentialsJSON)
-
-	return createClient(ctx, opt)
-}
-func createClient(ctx context.Context, opts ...option.ClientOption) (*GoogleBigQuery, error) {
+func createClient(ctx context.Context, excludeProjectIDs []string, opts ...option.ClientOption) (*GoogleBigQuery, error) {
 	projectsClient, err := resourcemanager.NewProjectsClient(ctx, opts...)
 	if err != nil {
 		return nil, err
@@ -76,7 +72,8 @@ func createClient(ctx context.Context, opts ...option.ClientOption) (*GoogleBigQ
 	}
 
 	return &GoogleBigQuery{
-		ProjectsClient: projectsClient,
-		BigQueryClient: bigQueryClient,
+		ProjectsClient:    projectsClient,
+		BigQueryClient:    bigQueryClient,
+		ExcludeProjectIDs: excludeProjectIDs,
 	}, nil
 }

@@ -12,12 +12,15 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"go.uber.org/zap"
 )
 
 type userBuilder struct {
-	resourceType   *v2.ResourceType
-	ProjectsClient *resourcemanager.ProjectsClient
-	BigQueryClient *bigquery.Client
+	resourceType      *v2.ResourceType
+	ProjectsClient    *resourcemanager.ProjectsClient
+	BigQueryClient    *bigquery.Client
+	excludeProjectIDs []string
 }
 
 func (o *userBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
@@ -46,8 +49,20 @@ func userResource(member string) (*v2.Resource, error) {
 // List returns all the users from the database as resource objects.
 // Users include a UserTrait because they are the 'shape' of a standard user.
 func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
+	var resources []*v2.Resource
+	l := ctxzap.Extract(ctx)
+	projectId := o.BigQueryClient.Project()
+	if isExcluded(o.excludeProjectIDs, projectId) {
+		l.Warn(
+			"baton-microsoft-entra: project ignoted",
+			zap.String("projectId", projectId),
+		)
+
+		return resources, "", nil, nil
+	}
+
 	policy, err := o.ProjectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
-		Resource: fmt.Sprintf("projects/%s", o.BigQueryClient.Project()),
+		Resource: fmt.Sprintf("projects/%s", projectId),
 	})
 	if err != nil {
 		if !isPermissionDenied(ctx, err) {
@@ -55,7 +70,6 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		}
 	}
 
-	var resources []*v2.Resource
 	if policy != nil {
 		for _, binding := range policy.Bindings {
 			for _, member := range binding.Members {
@@ -95,10 +109,11 @@ func (o *userBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 	return nil, "", nil, nil
 }
 
-func newUserBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *userBuilder {
+func newUserBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client, excludeIDs []string) *userBuilder {
 	return &userBuilder{
-		resourceType:   userResourceType,
-		ProjectsClient: projectsClient,
-		BigQueryClient: bigQueryClient,
+		resourceType:      userResourceType,
+		ProjectsClient:    projectsClient,
+		BigQueryClient:    bigQueryClient,
+		excludeProjectIDs: excludeIDs,
 	}
 }

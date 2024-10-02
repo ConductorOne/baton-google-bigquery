@@ -14,12 +14,15 @@ import (
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"go.uber.org/zap"
 )
 
 type roleBuilder struct {
-	resourceType   *v2.ResourceType
-	projectsClient *resourcemanager.ProjectsClient
-	bigQueryClient *bigquery.Client
+	resourceType      *v2.ResourceType
+	projectsClient    *resourcemanager.ProjectsClient
+	bigQueryClient    *bigquery.Client
+	excludeProjectIDs []string
 }
 
 const assignedEntitlement = "assigned"
@@ -52,6 +55,18 @@ func removeRolesPrefix(role string) string {
 }
 
 func (o *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
+	var resources []*v2.Resource
+	l := ctxzap.Extract(ctx)
+	projectId := o.bigQueryClient.Project()
+	if isExcluded(o.excludeProjectIDs, projectId) {
+		l.Warn(
+			"baton-microsoft-entra: project ignoted",
+			zap.String("projectId", projectId),
+		)
+
+		return resources, "", nil, nil
+	}
+
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
@@ -59,7 +74,6 @@ func (o *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		return nil, "", nil, wrapError(err, "listing roles failed")
 	}
 
-	var resources []*v2.Resource
 	if policy != nil {
 		for _, binding := range policy.Bindings {
 			resource, err := roleResource(binding.Role)
@@ -95,6 +109,18 @@ func (o *roleBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *
 }
 
 func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
+	var grants []*v2.Grant
+	l := ctxzap.Extract(ctx)
+	projectId := o.bigQueryClient.Project()
+	if isExcluded(o.excludeProjectIDs, projectId) {
+		l.Warn(
+			"baton-microsoft-entra: project ignoted",
+			zap.String("projectId", projectId),
+		)
+
+		return grants, "", nil, nil
+	}
+
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
@@ -102,7 +128,6 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 		return nil, "", nil, wrapError(err, "listing roles failed")
 	}
 
-	var grants []*v2.Grant
 	if policy != nil {
 		for _, binding := range policy.Bindings {
 			if binding.Role != resource.Id.Resource {
@@ -133,10 +158,11 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 	return grants, "", nil, nil
 }
 
-func newRoleBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *roleBuilder {
+func newRoleBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client, excludeIDs []string) *roleBuilder {
 	return &roleBuilder{
-		resourceType:   roleResourceType,
-		projectsClient: projectsClient,
-		bigQueryClient: bigQueryClient,
+		resourceType:      roleResourceType,
+		projectsClient:    projectsClient,
+		bigQueryClient:    bigQueryClient,
+		excludeProjectIDs: excludeIDs,
 	}
 }
