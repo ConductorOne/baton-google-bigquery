@@ -60,7 +60,7 @@ func (o *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 	projectId := o.bigQueryClient.Project()
 	if isExcluded(o.excludeProjectIDs, projectId) {
 		l.Warn(
-			"baton-microsoft-entra: project ignoted",
+			"baton-microsoft-entra: project in exclusion list",
 			zap.String("projectId", projectId),
 		)
 
@@ -114,7 +114,7 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 	projectId := o.bigQueryClient.Project()
 	if isExcluded(o.excludeProjectIDs, projectId) {
 		l.Warn(
-			"baton-microsoft-entra: project ignoted",
+			"baton-microsoft-entra: project in exclusion list",
 			zap.String("projectId", projectId),
 		)
 

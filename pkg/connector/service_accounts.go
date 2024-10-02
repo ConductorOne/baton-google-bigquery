@@ -52,7 +52,7 @@ func (o *serviceAccountBuilder) List(ctx context.Context, parentResourceID *v2.R
 	projectId := o.BigQueryClient.Project()
 	if isExcluded(o.excludeProjectIDs, projectId) {
 		l.Warn(
-			"baton-microsoft-entra: project ignoted",
+			"baton-microsoft-entra: project in exclusion list",
 			zap.String("projectId", projectId),
 		)
 
