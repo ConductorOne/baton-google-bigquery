@@ -125,7 +125,7 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
 	if !isPermissionDenied(ctx, err) {
-		return nil, "", nil, wrapError(err, "listing roles failed")
+		return nil, "", nil, wrapError(err, "listing grants for roles failed")
 	}
 
 	if policy != nil {

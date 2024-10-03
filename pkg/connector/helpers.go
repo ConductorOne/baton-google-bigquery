@@ -28,7 +28,7 @@ func isPermissionDenied(ctx context.Context, err error) bool {
 	var ae *apierror.APIError
 	l := ctxzap.Extract(ctx)
 	if errors.As(err, &ae) {
-		if ae.Reason() != iamPermissionDenied || ae.GRPCStatus().Code() != codes.PermissionDenied {
+		if ae.GRPCStatus().Code() != codes.PermissionDenied {
 			l.Error(
 				"baton-google-bigquery: listing resource failed",
 				zap.String("reason", ae.Reason()),
@@ -40,7 +40,10 @@ func isPermissionDenied(ctx context.Context, err error) bool {
 		}
 
 		l.Error(
-			"baton-google-bigquery: failed to get IAM policy",
+			"baton-google-bigquery: failed to list resources <PermissionDenied>",
+			zap.String("reason", ae.Reason()),
+			zap.Any("grpc_status", ae.GRPCStatus().Err()),
+			zap.Any("details", ae.Details().ErrorInfo),
 			zap.Any("error", err),
 		)
 	}
