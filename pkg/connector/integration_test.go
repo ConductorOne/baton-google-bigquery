@@ -60,6 +60,25 @@ func TestUserBuilderList(t *testing.T) {
 	require.Nil(t, err)
 }
 
+func TestProjectBuilderList(t *testing.T) {
+	if jsonFilePath == "" {
+		t.Skip()
+	}
+
+	cliTest, err := getClientForTesting(ctxTest)
+	require.Nil(t, err)
+
+	p := &projectBuilder{
+		resourceType:      datasetResourceType,
+		bigQueryClient:    cliTest.BigQueryClient,
+		projectsClient:    cliTest.ProjectsClient,
+		excludeProjectIDs: cliTest.ExcludeProjectIDs,
+	}
+
+	_, _, _, err = p.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})
+	require.Nil(t, err)
+}
+
 func TestCreateDataset(t *testing.T) {
 	if jsonFilePath == "" {
 		t.Skip()

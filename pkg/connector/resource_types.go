@@ -30,4 +30,10 @@ var (
 		Description: "Dataset of Google BigQuery",
 		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_APP},
 	}
+	projectResourceType = &v2.ResourceType{
+		Id:          "project",
+		DisplayName: "Project",
+		Description: "Project of Google BigQuery",
+		Traits:      []v2.ResourceType_Trait{v2.ResourceType_TRAIT_APP},
+	}
 )
