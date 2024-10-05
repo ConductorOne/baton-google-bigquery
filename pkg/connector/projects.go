@@ -29,10 +29,12 @@ func (p *projectBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return projectResourceType
 }
 
-func projectResource(projectName string) (*v2.Resource, error) {
+func projectResource(projects *resourcemanagerpb.Project) (*v2.Resource, error) {
 	var opts []rs.ResourceOption
 	profile := map[string]interface{}{
-		"name": projectName,
+		"id":          projects.ProjectId,
+		"name":        projects.Name,
+		"displayName": projects.DisplayName,
 	}
 
 	projectTraitOptions := []rs.AppTraitOption{
@@ -41,9 +43,9 @@ func projectResource(projectName string) (*v2.Resource, error) {
 
 	opts = append(opts, rs.WithAppTrait(projectTraitOptions...))
 	resource, err := rs.NewResource(
-		projectName,
+		projects.DisplayName,
 		projectResourceType,
-		projectName,
+		projects.ProjectId,
 		opts...,
 	)
 	if err != nil {
@@ -83,7 +85,7 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 			return nil, "", nil, wrapError(err, "Unable to fetch ptoject")
 		}
 
-		resource, err := projectResource(projects.DisplayName)
+		resource, err := projectResource(projects)
 		if err != nil {
 			return nil, "", nil, wrapError(err, "Unable to create project resource")
 		}
