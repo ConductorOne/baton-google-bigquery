@@ -121,11 +121,10 @@ func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	return grants, "", nil, nil
 }
 
-func newProjectBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client, excludeIDs []string) *projectBuilder {
+func newProjectBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *projectBuilder {
 	return &projectBuilder{
-		resourceType:      projectResourceType,
-		projectsClient:    projectsClient,
-		bigQueryClient:    bigQueryClient,
-		excludeProjectIDs: excludeIDs,
+		resourceType:   projectResourceType,
+		projectsClient: projectsClient,
+		bigQueryClient: bigQueryClient,
 	}
 }

@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	jsonFilePath = os.Getenv("BATON_CREDENTIALS_JSON_FILE_PATH")
+	jsonFilePath = os.Getenv("BATON_CREDENTIALS/_JSON_FILE_PATH")
 	ctxTest      = context.Background()
 )
 
@@ -35,10 +35,7 @@ func TestDatasetBuilderList(t *testing.T) {
 }
 
 func getClientForTesting(ctx context.Context) (*GoogleBigQuery, error) {
-	return New(ctx, jsonFilePath, []string{
-		"conductorone-c2",
-		"conductorone-integration",
-	})
+	return New(ctx, jsonFilePath)
 }
 
 func TestUserBuilderList(t *testing.T) {
@@ -50,10 +47,9 @@ func TestUserBuilderList(t *testing.T) {
 	require.Nil(t, err)
 
 	u := &userBuilder{
-		resourceType:      datasetResourceType,
-		BigQueryClient:    cliTest.BigQueryClient,
-		ProjectsClient:    cliTest.ProjectsClient,
-		excludeProjectIDs: cliTest.ExcludeProjectIDs,
+		resourceType:   datasetResourceType,
+		BigQueryClient: cliTest.BigQueryClient,
+		ProjectsClient: cliTest.ProjectsClient,
 	}
 
 	_, _, _, err = u.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})
@@ -69,10 +65,9 @@ func TestProjectBuilderList(t *testing.T) {
 	require.Nil(t, err)
 
 	p := &projectBuilder{
-		resourceType:      datasetResourceType,
-		bigQueryClient:    cliTest.BigQueryClient,
-		projectsClient:    cliTest.ProjectsClient,
-		excludeProjectIDs: cliTest.ExcludeProjectIDs,
+		resourceType:   datasetResourceType,
+		bigQueryClient: cliTest.BigQueryClient,
+		projectsClient: cliTest.ProjectsClient,
 	}
 
 	_, _, _, err = p.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})

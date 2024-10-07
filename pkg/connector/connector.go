@@ -14,19 +14,18 @@ import (
 )
 
 type GoogleBigQuery struct {
-	ProjectsClient    *resourcemanager.ProjectsClient
-	BigQueryClient    *bigquery.Client
-	ExcludeProjectIDs []string
+	ProjectsClient *resourcemanager.ProjectsClient
+	BigQueryClient *bigquery.Client
 }
 
 // ResourceSyncers returns a ResourceSyncer for each resource type that should be synced from the upstream service.
 func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
 	return []connectorbuilder.ResourceSyncer{
-		newUserBuilder(d.ProjectsClient, d.BigQueryClient, d.ExcludeProjectIDs),
-		newServiceAccountBuilder(d.ProjectsClient, d.BigQueryClient, d.ExcludeProjectIDs),
-		newRoleBuilder(d.ProjectsClient, d.BigQueryClient, d.ExcludeProjectIDs),
+		newUserBuilder(d.ProjectsClient, d.BigQueryClient),
+		newServiceAccountBuilder(d.ProjectsClient, d.BigQueryClient),
+		newRoleBuilder(d.ProjectsClient, d.BigQueryClient),
 		newDatasetBuilder(d.BigQueryClient, d.ProjectsClient),
-		newProjectBuilder(d.ProjectsClient, d.BigQueryClient, d.ExcludeProjectIDs),
+		newProjectBuilder(d.ProjectsClient, d.BigQueryClient),
 	}
 }
 
@@ -55,13 +54,13 @@ func (d *GoogleBigQuery) Validate(ctx context.Context) (annotations.Annotations,
 }
 
 // New returns a new instance of the connector.
-func New(ctx context.Context, credentialsJSONFilePath string, excludeProjectIDs []string) (*GoogleBigQuery, error) {
+func New(ctx context.Context, credentialsJSONFilePath string) (*GoogleBigQuery, error) {
 	opt := option.WithCredentialsFile(credentialsJSONFilePath)
 
-	return createClient(ctx, excludeProjectIDs, opt)
+	return createClient(ctx, opt)
 }
 
-func createClient(ctx context.Context, excludeProjectIDs []string, opts ...option.ClientOption) (*GoogleBigQuery, error) {
+func createClient(ctx context.Context, opts ...option.ClientOption) (*GoogleBigQuery, error) {
 	projectsClient, err := resourcemanager.NewProjectsClient(ctx, opts...)
 	if err != nil {
 		return nil, err
@@ -73,8 +72,7 @@ func createClient(ctx context.Context, excludeProjectIDs []string, opts ...optio
 	}
 
 	return &GoogleBigQuery{
-		ProjectsClient:    projectsClient,
-		BigQueryClient:    bigQueryClient,
-		ExcludeProjectIDs: excludeProjectIDs,
+		ProjectsClient: projectsClient,
+		BigQueryClient: bigQueryClient,
 	}, nil
 }

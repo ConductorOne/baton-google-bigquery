@@ -105,11 +105,10 @@ func (o *serviceAccountBuilder) Grants(ctx context.Context, resource *v2.Resourc
 	return nil, "", nil, nil
 }
 
-func newServiceAccountBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client, excludeIDs []string) *serviceAccountBuilder {
+func newServiceAccountBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *serviceAccountBuilder {
 	return &serviceAccountBuilder{
-		resourceType:      serviceAccountResourceType,
-		ProjectsClient:    projectsClient,
-		BigQueryClient:    bigQueryClient,
-		excludeProjectIDs: excludeIDs,
+		resourceType:   serviceAccountResourceType,
+		ProjectsClient: projectsClient,
+		BigQueryClient: bigQueryClient,
 	}
 }

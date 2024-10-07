@@ -158,11 +158,10 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 	return grants, "", nil, nil
 }
 
-func newRoleBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client, excludeIDs []string) *roleBuilder {
+func newRoleBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *roleBuilder {
 	return &roleBuilder{
-		resourceType:      roleResourceType,
-		projectsClient:    projectsClient,
-		bigQueryClient:    bigQueryClient,
-		excludeProjectIDs: excludeIDs,
+		resourceType:   roleResourceType,
+		projectsClient: projectsClient,
+		bigQueryClient: bigQueryClient,
 	}
 }
