@@ -69,7 +69,6 @@ Flags:
       --client-id string                    The client ID used to authenticate with ConductorOne ($BATON_CLIENT_ID)
       --client-secret string                The client secret used to authenticate with ConductorOne ($BATON_CLIENT_SECRET)
       --credentials-json-file-path string   required: JSON credentials file name for the Google identity platform account. ($BATON_CREDENTIALS_JSON_FILE_PATH)
-      --exclude-project-ids string          List of projects ids to ignore. ($BATON_EXCLUDE_PROJECT_IDS)
   -f, --file string                         The path to the c1z file to sync with ($BATON_FILE) (default "sync.c1z")
   -h, --help                                help for baton-google-bigquery
       --log-format string                   The output format for logs: json, console ($BATON_LOG_FORMAT) (default "json")

@@ -13,16 +13,13 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
-	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
 )
 
 type projectBuilder struct {
-	resourceType      *v2.ResourceType
-	projectsClient    *resourcemanager.ProjectsClient
-	bigQueryClient    *bigquery.Client
-	excludeProjectIDs []string
+	resourceType   *v2.ResourceType
+	projectsClient *resourcemanager.ProjectsClient
+	bigQueryClient *bigquery.Client
 }
 
 func (p *projectBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
@@ -56,20 +53,7 @@ func projectResource(projects *resourcemanagerpb.Project) (*v2.Resource, error) 
 }
 
 func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
-	var (
-		resources []*v2.Resource
-		projectId = p.bigQueryClient.Project()
-	)
-	l := ctxzap.Extract(ctx)
-	if isExcluded(p.excludeProjectIDs, projectId) {
-		l.Warn(
-			"baton-google-bigquery: project in exclusion list",
-			zap.String("projectId", projectId),
-		)
-
-		return resources, "", nil, nil
-	}
-
+	var resources []*v2.Resource
 	it := p.projectsClient.SearchProjects(ctx,
 		&resourcemanagerpb.SearchProjectsRequest{
 			Query: "",
@@ -116,9 +100,7 @@ func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 }
 
 func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
-	var grants []*v2.Grant
-
-	return grants, "", nil, nil
+	return nil, "", nil, nil
 }
 
 func newProjectBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *projectBuilder {

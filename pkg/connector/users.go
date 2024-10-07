@@ -12,8 +12,6 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
-	"go.uber.org/zap"
 )
 
 type userBuilder struct {
@@ -50,19 +48,8 @@ func userResource(member string) (*v2.Resource, error) {
 // Users include a UserTrait because they are the 'shape' of a standard user.
 func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
 	var resources []*v2.Resource
-	l := ctxzap.Extract(ctx)
-	projectId := o.BigQueryClient.Project()
-	if isExcluded(o.excludeProjectIDs, projectId) {
-		l.Warn(
-			"baton-google-bigquery: project in exclusion list",
-			zap.String("projectId", projectId),
-		)
-
-		return resources, "", nil, nil
-	}
-
 	policy, err := o.ProjectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
-		Resource: fmt.Sprintf("projects/%s", projectId),
+		Resource: fmt.Sprintf("projects/%s", o.BigQueryClient.Project()),
 	})
 	if err != nil {
 		if !isPermissionDenied(ctx, err) {
