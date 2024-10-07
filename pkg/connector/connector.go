@@ -25,6 +25,7 @@ func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder
 		newServiceAccountBuilder(d.ProjectsClient, d.BigQueryClient),
 		newRoleBuilder(d.ProjectsClient, d.BigQueryClient),
 		newDatasetBuilder(d.BigQueryClient, d.ProjectsClient),
+		newProjectBuilder(d.ProjectsClient, d.BigQueryClient),
 	}
 }
 
@@ -59,11 +60,6 @@ func New(ctx context.Context, credentialsJSONFilePath string) (*GoogleBigQuery, 
 	return createClient(ctx, opt)
 }
 
-func NewFromJSONBytes(ctx context.Context, credentialsJSON []byte) (*GoogleBigQuery, error) {
-	opt := option.WithCredentialsJSON(credentialsJSON)
-
-	return createClient(ctx, opt)
-}
 func createClient(ctx context.Context, opts ...option.ClientOption) (*GoogleBigQuery, error) {
 	projectsClient, err := resourcemanager.NewProjectsClient(ctx, opts...)
 	if err != nil {
