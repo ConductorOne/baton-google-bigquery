@@ -15,10 +15,9 @@ import (
 )
 
 type userBuilder struct {
-	resourceType      *v2.ResourceType
-	ProjectsClient    *resourcemanager.ProjectsClient
-	BigQueryClient    *bigquery.Client
-	excludeProjectIDs []string
+	resourceType   *v2.ResourceType
+	ProjectsClient *resourcemanager.ProjectsClient
+	BigQueryClient *bigquery.Client
 }
 
 func (o *userBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
