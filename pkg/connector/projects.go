@@ -11,7 +11,6 @@ import (
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
-	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 )
 
@@ -116,22 +115,7 @@ func unmarshalSkipToken(token *pagination.Token) (int32, *pagination.Bag, error)
 }
 
 func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
-	var rv []*v2.Entitlement
-	assigmentOptions := []ent.EntitlementOption{
-		ent.WithGrantableTo(userResourceType),
-		ent.WithDescription(fmt.Sprintf("Assigned to %s project", resource.DisplayName)),
-		ent.WithDisplayName(fmt.Sprintf("%s project %s", resource.DisplayName, assignedEntitlement)),
-	}
-	rv = append(rv, ent.NewAssignmentEntitlement(resource, assignedEntitlement, assigmentOptions...))
-
-	assigmentOptions = []ent.EntitlementOption{
-		ent.WithGrantableTo(serviceAccountResourceType),
-		ent.WithDescription(fmt.Sprintf("Assigned to %s project", resource.DisplayName)),
-		ent.WithDisplayName(fmt.Sprintf("%s project %s", resource.DisplayName, assignedEntitlement)),
-	}
-	rv = append(rv, ent.NewAssignmentEntitlement(resource, assignedEntitlement, assigmentOptions...))
-
-	return rv, "", nil, nil
+	return nil, "", nil, nil
 }
 
 func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
