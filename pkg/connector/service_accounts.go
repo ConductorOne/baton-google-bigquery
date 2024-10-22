@@ -62,25 +62,29 @@ func (o *serviceAccountBuilder) List(ctx context.Context, parentResourceID *v2.R
 	policy, err := o.ProjectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.BigQueryClient.Project()),
 	})
-	if !isPermissionDenied(ctx, err) {
-		return nil, "", nil, wrapError(err, "listing service accounts failed")
+	if err != nil {
+		if !isPermissionDenied(ctx, err) {
+			return nil, "", nil, wrapError(err, "failed to get IAM policy")
+		}
 	}
 
-	if policy != nil {
-		for _, binding := range policy.Bindings {
-			for _, member := range binding.Members {
-				isServiceAccount, member := isServiceAccount(member)
-				if !isServiceAccount {
-					continue
-				}
+	if policy == nil {
+		return resources, "", nil, nil
+	}
 
-				resource, err := serviceAccountResource(member)
-				if err != nil {
-					return nil, "", nil, wrapError(err, "failed to create service account resource")
-				}
-
-				resources = append(resources, resource)
+	for _, binding := range policy.Bindings {
+		for _, member := range binding.Members {
+			isServiceAccount, member := isServiceAccount(member)
+			if !isServiceAccount {
+				continue
 			}
+
+			resource, err := serviceAccountResource(member)
+			if err != nil {
+				return nil, "", nil, wrapError(err, "failed to create service account resource")
+			}
+
+			resources = append(resources, resource)
 		}
 	}
 

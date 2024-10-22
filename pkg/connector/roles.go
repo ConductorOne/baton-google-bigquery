@@ -56,19 +56,23 @@ func (o *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
-	if !isPermissionDenied(ctx, err) {
-		return nil, "", nil, wrapError(err, "listing roles failed")
+	if err != nil {
+		if !isPermissionDenied(ctx, err) {
+			return nil, "", nil, wrapError(err, "failed to get IAM policy")
+		}
 	}
 
-	if policy != nil {
-		for _, binding := range policy.Bindings {
-			resource, err := roleResource(binding.Role)
-			if err != nil {
-				return nil, "", nil, wrapError(err, "failed to create role resource")
-			}
+	if policy == nil {
+		return resources, "", nil, nil
+	}
 
-			resources = append(resources, resource)
+	for _, binding := range policy.Bindings {
+		resource, err := roleResource(binding.Role)
+		if err != nil {
+			return nil, "", nil, wrapError(err, "failed to create role resource")
 		}
+
+		resources = append(resources, resource)
 	}
 
 	return resources, "", nil, nil
@@ -99,33 +103,39 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
+	if err != nil {
+		return nil, "", nil, err
+	}
+
 	if !isPermissionDenied(ctx, err) {
 		return nil, "", nil, wrapError(err, "listing grants for roles failed")
 	}
 
-	if policy != nil {
-		for _, binding := range policy.Bindings {
-			if binding.Role != resource.Id.Resource {
-				continue
-			}
+	if policy == nil {
+		return grants, "", nil, nil
+	}
 
-			for _, member := range binding.Members {
-				// TODO: handle group bindings
-				if isUser, user := isUser(member); isUser {
-					userResource, err := userResource(user)
-					if err != nil {
-						return nil, "", nil, wrapError(err, "failed to create user resource")
-					}
+	for _, binding := range policy.Bindings {
+		if binding.Role != resource.Id.Resource {
+			continue
+		}
 
-					grants = append(grants, grant.NewGrant(resource, assignedEntitlement, userResource.Id))
-				} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
-					serviceAccountResource, err := serviceAccountResource(serviceAccount)
-					if err != nil {
-						return nil, "", nil, wrapError(err, "failed to create service account resource")
-					}
-
-					grants = append(grants, grant.NewGrant(resource, assignedEntitlement, serviceAccountResource.Id))
+		for _, member := range binding.Members {
+			// TODO: handle group bindings
+			if isUser, user := isUser(member); isUser {
+				userResource, err := userResource(user)
+				if err != nil {
+					return nil, "", nil, wrapError(err, "failed to create user resource")
 				}
+
+				grants = append(grants, grant.NewGrant(resource, assignedEntitlement, userResource.Id))
+			} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
+				serviceAccountResource, err := serviceAccountResource(serviceAccount)
+				if err != nil {
+					return nil, "", nil, wrapError(err, "failed to create service account resource")
+				}
+
+				grants = append(grants, grant.NewGrant(resource, assignedEntitlement, serviceAccountResource.Id))
 			}
 		}
 	}

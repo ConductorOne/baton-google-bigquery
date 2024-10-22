@@ -162,59 +162,64 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
-	if !isPermissionDenied(ctx, err) {
-		return nil, "", nil, wrapError(err, "listing grants for datasets failed")
+
+	if err != nil {
+		if !isPermissionDenied(ctx, err) {
+			return nil, "", nil, wrapError(err, "failed to get IAM policy")
+		}
 	}
 
 	var grants []*v2.Grant
-	if policy != nil {
-		for _, access := range dataset.Access {
-			if (access.Role == bigquery.OwnerRole || access.EntityType == bigquery.UserEmailEntity) && access.EntityType != bigquery.SpecialGroupEntity {
-				g, err := o.GetUserOwnerGrants(policy, resource, access)
-				if err != nil {
-					return nil, "", nil, err
-				}
-				grants = append(grants, g...)
+	if policy == nil {
+		return grants, "", nil, nil
+	}
+
+	for _, access := range dataset.Access {
+		if (access.Role == bigquery.OwnerRole || access.EntityType == bigquery.UserEmailEntity) && access.EntityType != bigquery.SpecialGroupEntity {
+			g, err := o.GetUserOwnerGrants(policy, resource, access)
+			if err != nil {
+				return nil, "", nil, err
+			}
+			grants = append(grants, g...)
+		}
+
+		stringLegacyRoleValue := string(access.Role)
+		role, exists := legacyRolesMap[stringLegacyRoleValue]
+		if !exists {
+			return nil, "", nil, wrapError(fmt.Errorf("role for legacy role %s not found", stringLegacyRoleValue), "")
+		}
+
+		e, exists := legacyRolesToEntitlementsMap[stringLegacyRoleValue]
+		if !exists {
+			return nil, "", nil, wrapError(fmt.Errorf("entitlement for legacy role %s not found", stringLegacyRoleValue), "")
+		}
+
+		for _, binding := range policy.Bindings {
+			if binding.Role != role {
+				continue
 			}
 
-			stringLegacyRoleValue := string(access.Role)
-			role, exists := legacyRolesMap[stringLegacyRoleValue]
-			if !exists {
-				return nil, "", nil, wrapError(fmt.Errorf("role for legacy role %s not found", stringLegacyRoleValue), "")
+			g, err := o.GetRoleGrants(resource, role)
+			if err != nil {
+				return nil, "", nil, err
 			}
+			grants = append(grants, g...)
 
-			e, exists := legacyRolesToEntitlementsMap[stringLegacyRoleValue]
-			if !exists {
-				return nil, "", nil, wrapError(fmt.Errorf("entitlement for legacy role %s not found", stringLegacyRoleValue), "")
-			}
-
-			for _, binding := range policy.Bindings {
-				if binding.Role != role {
-					continue
-				}
-
-				g, err := o.GetRoleGrants(resource, role)
-				if err != nil {
-					return nil, "", nil, err
-				}
-				grants = append(grants, g...)
-
-				for _, member := range binding.Members {
-					if isUser, user := isUser(member); isUser {
-						userResource, err := userResource(user)
-						if err != nil {
-							return nil, "", nil, wrapError(err, "Unable to create user resource")
-						}
-
-						grants = append(grants, grant.NewGrant(resource, e, userResource.Id))
-					} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
-						serviceAccountResource, err := serviceAccountResource(serviceAccount)
-						if err != nil {
-							return nil, "", nil, wrapError(err, "Unable to create service account resource")
-						}
-
-						grants = append(grants, grant.NewGrant(resource, e, serviceAccountResource.Id))
+			for _, member := range binding.Members {
+				if isUser, user := isUser(member); isUser {
+					userResource, err := userResource(user)
+					if err != nil {
+						return nil, "", nil, wrapError(err, "Unable to create user resource")
 					}
+
+					grants = append(grants, grant.NewGrant(resource, e, userResource.Id))
+				} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
+					serviceAccountResource, err := serviceAccountResource(serviceAccount)
+					if err != nil {
+						return nil, "", nil, wrapError(err, "Unable to create service account resource")
+					}
+
+					grants = append(grants, grant.NewGrant(resource, e, serviceAccountResource.Id))
 				}
 			}
 		}
