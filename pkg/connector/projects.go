@@ -68,12 +68,12 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 		})
 	}
 
-	projects, err := it.Next()
+	project, err := it.Next()
 	if err != nil {
 		return nil, "", nil, err
 	}
 
-	err = bag.Next(projects.ProjectId)
+	err = bag.Next(project.ProjectId)
 	if err != nil {
 		return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
 	}
@@ -83,7 +83,7 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 		return nil, "", nil, err
 	}
 
-	resource, err := projectResource(projects)
+	resource, err := projectResource(project)
 	if err != nil {
 		return nil, "", nil, wrapError(err, "Unable to create project resource")
 	}
