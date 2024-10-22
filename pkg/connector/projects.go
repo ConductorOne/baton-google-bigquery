@@ -2,8 +2,8 @@ package connector
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"strconv"
 
 	"cloud.google.com/go/bigquery"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
@@ -13,7 +13,6 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
-	"google.golang.org/api/iterator"
 )
 
 type projectBuilder struct {
@@ -59,25 +58,61 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 			Query: "",
 		},
 	)
-	for {
-		projects, err := it.Next()
-		if errors.Is(err, iterator.Done) {
-			break
-		}
-
-		if err != nil {
-			return nil, "", nil, wrapError(err, "Unable to fetch ptoject")
-		}
-
-		resource, err := projectResource(projects)
-		if err != nil {
-			return nil, "", nil, wrapError(err, "Unable to create project resource")
-		}
-
-		resources = append(resources, resource)
+	_, bag, err := unmarshalSkipToken(pToken)
+	if err != nil {
+		return nil, "", nil, err
 	}
 
-	return resources, "", nil, nil
+	if bag.Current() == nil {
+		bag.Push(pagination.PageState{
+			ResourceTypeID: projectResourceType.Id,
+		})
+	}
+
+	projects, err := it.Next()
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	err = bag.Next(projects.ProjectId)
+	if err != nil {
+		return nil, "", nil, fmt.Errorf("okta-connectorv2: failed to fetch bag.Next: %w", err)
+	}
+
+	pageToken, err := bag.Marshal()
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	resource, err := projectResource(projects)
+	if err != nil {
+		return nil, "", nil, wrapError(err, "Unable to create project resource")
+	}
+
+	resources = append(resources, resource)
+	if it.PageInfo().Remaining() == 0 {
+		pageToken = ""
+	}
+
+	return resources, pageToken, nil, nil
+}
+
+func unmarshalSkipToken(token *pagination.Token) (int32, *pagination.Bag, error) {
+	b := &pagination.Bag{}
+	err := b.Unmarshal(token.Token)
+	if err != nil {
+		return 0, nil, err
+	}
+	current := b.Current()
+	skip := int32(0)
+	if current != nil && current.Token != "" {
+		skip64, err := strconv.ParseInt(current.Token, 10, 32)
+		if err != nil {
+			return 0, nil, err
+		}
+		skip = int32(skip64)
+	}
+	return skip, b, nil
 }
 
 func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
