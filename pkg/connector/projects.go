@@ -80,11 +80,9 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 	}
 
 	resources = append(resources, resource)
-	if bag.Pop().Token != "" {
-		err = bag.Next(project.ProjectId)
-		if err != nil {
-			return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
-		}
+	err = bag.Next(project.ProjectId)
+	if err != nil {
+		return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
 	}
 
 	pageToken, err := bag.Marshal()
@@ -92,7 +90,7 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 		return nil, "", nil, err
 	}
 
-	if it.PageInfo().Remaining() == 0 {
+	if bag.Pop().Token != "" {
 		pageToken = ""
 	}
 
