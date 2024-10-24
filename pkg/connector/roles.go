@@ -52,14 +52,20 @@ func removeRolesPrefix(role string) string {
 }
 
 func (o *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
+	var resources []*v2.Resource
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
 	if err != nil {
-		return nil, "", nil, wrapError(err, "failed to get IAM policy")
+		if !isPermissionDenied(ctx, err) {
+			return nil, "", nil, wrapError(err, "failed to get IAM policy")
+		}
 	}
 
-	var resources []*v2.Resource
+	if policy == nil {
+		return resources, "", nil, nil
+	}
+
 	for _, binding := range policy.Bindings {
 		resource, err := roleResource(binding.Role)
 		if err != nil {
@@ -93,14 +99,20 @@ func (o *roleBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *
 }
 
 func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
+	var grants []*v2.Grant
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
 	if err != nil {
-		return nil, "", nil, wrapError(err, "failed to get IAM policy")
+		if !isPermissionDenied(ctx, err) {
+			return nil, "", nil, wrapError(err, "listing grants for roles failed")
+		}
 	}
 
-	var grants []*v2.Grant
+	if policy == nil {
+		return grants, "", nil, nil
+	}
+
 	for _, binding := range policy.Bindings {
 		if binding.Role != resource.Id.Resource {
 			continue
