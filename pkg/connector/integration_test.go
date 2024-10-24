@@ -70,8 +70,14 @@ func TestProjectBuilderList(t *testing.T) {
 		projectsClient: cliTest.ProjectsClient,
 	}
 
-	_, _, _, err = p.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})
-	require.Nil(t, err)
+	var token = "{}"
+	for token != "" {
+		_, pageToken, _, err := p.List(ctxTest, &v2.ResourceId{}, &pagination.Token{
+			Token: token,
+		})
+		require.Nil(t, err)
+		token = pageToken
+	}
 }
 
 func TestCreateDataset(t *testing.T) {
