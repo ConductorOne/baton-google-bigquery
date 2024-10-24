@@ -3,7 +3,6 @@ package connector
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"cloud.google.com/go/bigquery"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
@@ -52,33 +51,25 @@ func projectResource(projects *resourcemanagerpb.Project) (*v2.Resource, error) 
 
 func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
 	var resources []*v2.Resource
+	bag := &pagination.Bag{}
 	it := p.projectsClient.SearchProjects(ctx,
 		&resourcemanagerpb.SearchProjectsRequest{
 			Query: "",
 		},
 	)
-	_, bag, err := unmarshalSkipToken(pToken)
+
+	err := bag.Unmarshal(pToken.Token)
 	if err != nil {
 		return nil, "", nil, err
 	}
 
 	if bag.Current() == nil {
 		bag.Push(pagination.PageState{
-			ResourceTypeID: projectResourceType.Id,
+			ResourceTypeID: roleResourceType.Id,
 		})
 	}
 
 	project, err := it.Next()
-	if err != nil {
-		return nil, "", nil, err
-	}
-
-	err = bag.Next(project.ProjectId)
-	if err != nil {
-		return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
-	}
-
-	pageToken, err := bag.Marshal()
 	if err != nil {
 		return nil, "", nil, err
 	}
@@ -89,29 +80,23 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 	}
 
 	resources = append(resources, resource)
+	if bag.Pop().Token != "" {
+		err = bag.Next(project.ProjectId)
+		if err != nil {
+			return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
+		}
+	}
+
+	pageToken, err := bag.Marshal()
+	if err != nil {
+		return nil, "", nil, err
+	}
+
 	if it.PageInfo().Remaining() == 0 {
 		pageToken = ""
 	}
 
 	return resources, pageToken, nil, nil
-}
-
-func unmarshalSkipToken(token *pagination.Token) (int32, *pagination.Bag, error) {
-	b := &pagination.Bag{}
-	err := b.Unmarshal(token.Token)
-	if err != nil {
-		return 0, nil, err
-	}
-	current := b.Current()
-	skip := int32(0)
-	if current != nil && current.Token != "" {
-		skip64, err := strconv.ParseInt(current.Token, 10, 32)
-		if err != nil {
-			return 0, nil, err
-		}
-		skip = int32(skip64)
-	}
-	return skip, b, nil
 }
 
 func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
