@@ -64,7 +64,7 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 
 	if bag.Current() == nil {
 		bag.Push(pagination.PageState{
-			ResourceTypeID: roleResourceType.Id,
+			ResourceTypeID: projectResourceType.Id,
 		})
 	}
 
