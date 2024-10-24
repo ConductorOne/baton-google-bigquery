@@ -30,7 +30,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: go tests
-        run: go test -v -covermode=count -json ./... > test.json
+        run: (set -o pipefail && go test -v -covermode=count -json ./... | tee test.json)
       - name: annotate go tests
         if: always()
         uses: guyarb/golang-test-annotations@v0.5.1
@@ -42,10 +42,6 @@ jobs:
     env:
       BATON_LOG_LEVEL: debug
       # Add any environment variables needed to run baton-google-bigquery
-      BATON_GRANT: 'grant:entitlement:group:1234:member:user:9876'
-      BATON_ENTITLEMENT: 'entitlement:group:1234:member'
-      BATON_PRINCIPAL: 'user:9876'
-      BATON_PRINCIPAL_TYPE: 'user'
       BATON: baton
       BATON_GOOGLE_BIGQUERY: ./baton-google-bigquery
     steps:
@@ -59,3 +55,10 @@ jobs:
         run: go build ./cmd/baton-google-bigquery
       - name: Install baton
         run: ./scripts/get-baton.sh && mv baton /usr/local/bin
+      - name: Write credentials to file
+        run: |
+          cat << EOF > ./creds.json
+          ${{ secrets.BATON_CREDENTIALS_JSON }}
+          EOF
+      - name: Run baton-google-bigquery
+        run: ./baton-google-bigquery --credentials-json-file-path=creds.json
