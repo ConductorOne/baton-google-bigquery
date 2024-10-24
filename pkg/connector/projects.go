@@ -2,7 +2,6 @@ package connector
 
 import (
 	"context"
-	"fmt"
 
 	"cloud.google.com/go/bigquery"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
@@ -80,18 +79,10 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 	}
 
 	resources = append(resources, resource)
-	err = bag.Next(project.ProjectId)
-	if err != nil {
-		return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
-	}
-
+	bag.Pop()
 	pageToken, err := bag.Marshal()
 	if err != nil {
 		return nil, "", nil, err
-	}
-
-	if bag.Pop().Token != "" {
-		pageToken = ""
 	}
 
 	return resources, pageToken, nil, nil
