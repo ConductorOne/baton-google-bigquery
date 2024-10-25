@@ -28,6 +28,8 @@ const (
 	writerEntitlement = "writer"
 	viewerEntitlement = "viewer"
 	accessEntitlement = "access"
+	serviceAccount    = "serviceAccount"
+	user              = "user"
 )
 
 var (
@@ -136,6 +138,21 @@ func (o *datasetBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 	return rv, "", nil, nil
 }
 
+func isUserOrServiceAccount(policy *iampb.Policy, memberGranted string) string {
+	for _, binding := range policy.Bindings {
+		for _, member := range binding.Members {
+			switch member {
+			case fmt.Sprintf("%s:%s", serviceAccount, memberGranted):
+				return serviceAccount
+			case fmt.Sprintf("%s:%s", user, memberGranted):
+				return user
+			}
+		}
+	}
+
+	return ""
+}
+
 func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	dataset, err := o.bigQueryClient.Dataset(resource.Id.Resource).Metadata(ctx)
 	if err != nil {
@@ -145,14 +162,21 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
+
 	if err != nil {
-		return nil, "", nil, wrapError(err, "Unable to fetch IAM policy for project")
+		if !isPermissionDenied(ctx, err) {
+			return nil, "", nil, wrapError(err, "failed to get IAM policy")
+		}
 	}
 
 	var grants []*v2.Grant
+	if policy == nil {
+		return grants, "", nil, nil
+	}
+
 	for _, access := range dataset.Access {
-		if access.Role == bigquery.OwnerRole || access.EntityType == bigquery.UserEmailEntity {
-			g, err := o.GetUserOwnerGrants(resource, access)
+		if (access.Role == bigquery.OwnerRole || access.EntityType == bigquery.UserEmailEntity) && access.EntityType != bigquery.SpecialGroupEntity {
+			g, err := o.GetUserOwnerGrants(policy, resource, access)
 			if err != nil {
 				return nil, "", nil, err
 			}
@@ -204,14 +228,23 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	return grants, "", nil, nil
 }
 
-func (o *datasetBuilder) GetUserOwnerGrants(resource *v2.Resource, access *bigquery.AccessEntry) ([]*v2.Grant, error) {
-	userResource, err := userResource(access.Entity)
+func (o *datasetBuilder) GetUserOwnerGrants(policy *iampb.Policy, resource *v2.Resource, access *bigquery.AccessEntry) ([]*v2.Grant, error) {
+	var (
+		res *v2.Resource
+		err error
+	)
+	switch isUserOrServiceAccount(policy, access.Entity) {
+	case serviceAccount:
+		res, err = serviceAccountResource(access.Entity)
+	case user:
+		res, err = userResource(access.Entity)
+	}
 	if err != nil {
 		return nil, err
 	}
 
 	return []*v2.Grant{
-		grant.NewGrant(resource, ownerEntitlement, userResource.Id),
+		grant.NewGrant(resource, ownerEntitlement, res.Id),
 	}, nil
 }
 
