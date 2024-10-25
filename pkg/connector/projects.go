@@ -2,6 +2,8 @@ package connector
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"cloud.google.com/go/bigquery"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
@@ -10,6 +12,7 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
+	"google.golang.org/api/iterator"
 )
 
 type projectBuilder struct {
@@ -51,12 +54,6 @@ func projectResource(projects *resourcemanagerpb.Project) (*v2.Resource, error) 
 func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
 	var resources []*v2.Resource
 	bag := &pagination.Bag{}
-	it := p.projectsClient.SearchProjects(ctx,
-		&resourcemanagerpb.SearchProjectsRequest{
-			Query: "",
-		},
-	)
-
 	err := bag.Unmarshal(pToken.Token)
 	if err != nil {
 		return nil, "", nil, err
@@ -68,18 +65,32 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 		})
 	}
 
-	project, err := it.Next()
-	if err != nil {
-		return nil, "", nil, err
+	it := p.projectsClient.SearchProjects(ctx,
+		&resourcemanagerpb.SearchProjectsRequest{
+			Query:     "",
+			PageToken: bag.PageToken(),
+		},
+	)
+
+	for {
+		projects, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+
+		resource, err := projectResource(projects)
+		if err != nil {
+			return nil, "", nil, wrapError(err, "Unable to create project resource")
+		}
+
+		resources = append(resources, resource)
 	}
 
-	resource, err := projectResource(project)
+	err = bag.Next(it.PageInfo().Token)
 	if err != nil {
-		return nil, "", nil, wrapError(err, "Unable to create project resource")
+		return nil, "", nil, fmt.Errorf("okta-connectorv2: failed to fetch bag.Next: %w", err)
 	}
 
-	resources = append(resources, resource)
-	bag.Pop()
 	pageToken, err := bag.Marshal()
 	if err != nil {
 		return nil, "", nil, err
