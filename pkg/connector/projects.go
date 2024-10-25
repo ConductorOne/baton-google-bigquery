@@ -90,7 +90,7 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 
 	err = bag.Next(it.PageInfo().Token)
 	if err != nil {
-		return nil, "", nil, fmt.Errorf("okta-connectorv2: failed to fetch bag.Next: %w", err)
+		return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
 	}
 
 	pageToken, err := bag.Marshal()
