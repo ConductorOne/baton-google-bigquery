@@ -52,8 +52,10 @@ func projectResource(projects *resourcemanagerpb.Project) (*v2.Resource, error) 
 }
 
 func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
-	var resources []*v2.Resource
-	bag := &pagination.Bag{}
+	var (
+		resources []*v2.Resource
+		bag       = &pagination.Bag{}
+	)
 	err := bag.Unmarshal(pToken.Token)
 	if err != nil {
 		return nil, "", nil, err
