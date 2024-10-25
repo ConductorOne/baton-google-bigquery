@@ -56,21 +56,23 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		}
 	}
 
-	if policy != nil {
-		for _, binding := range policy.Bindings {
-			for _, member := range binding.Members {
-				isUser, member := isUser(member)
-				if !isUser {
-					continue
-				}
+	if policy == nil {
+		return resources, "", nil, nil
+	}
 
-				resource, err := userResource(member)
-				if err != nil {
-					return nil, "", nil, wrapError(err, "failed to create user resource")
-				}
-
-				resources = append(resources, resource)
+	for _, binding := range policy.Bindings {
+		for _, member := range binding.Members {
+			isUser, member := isUser(member)
+			if !isUser {
+				continue
 			}
+
+			resource, err := userResource(member)
+			if err != nil {
+				return nil, "", nil, wrapError(err, "failed to create user resource")
+			}
+
+			resources = append(resources, resource)
 		}
 	}
 
