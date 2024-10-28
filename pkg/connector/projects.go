@@ -76,7 +76,7 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 
 	for {
 		projects, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		if errors.Is(err, iterator.Done) || projects == nil {
 			break
 		}
 
