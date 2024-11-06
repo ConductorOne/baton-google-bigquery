@@ -82,13 +82,14 @@ func datasetResource(dataset string) (*v2.Resource, error) {
 }
 
 func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
-	iter := o.bigQueryClient.Datasets(ctx)
 	var resources []*v2.Resource
+	iter := o.bigQueryClient.Datasets(ctx)
 	for {
 		dataset, err := iter.Next()
-		if errors.Is(err, iterator.Done) {
+		if errors.Is(err, iterator.Done) || dataset == nil {
 			break
 		}
+
 		if err != nil {
 			return nil, "", nil, wrapError(err, "Unable to fetch dataset")
 		}

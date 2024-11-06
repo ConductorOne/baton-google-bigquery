@@ -11,6 +11,7 @@ import (
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
+	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"google.golang.org/api/iterator"
 )
@@ -76,8 +77,12 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 
 	for {
 		projects, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		if errors.Is(err, iterator.Done) || projects == nil {
 			break
+		}
+
+		if err != nil {
+			return nil, "", nil, wrapError(err, "Unable to fetch projects")
 		}
 
 		resource, err := projectResource(projects)
@@ -102,7 +107,23 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 }
 
 func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
-	return nil, "", nil, nil
+	var rv []*v2.Entitlement
+	assigmentOptions := []ent.EntitlementOption{
+		ent.WithGrantableTo(userResourceType),
+		ent.WithDescription(fmt.Sprintf("Assigned to %s project", resource.DisplayName)),
+		ent.WithDisplayName(fmt.Sprintf("%s project %s", resource.DisplayName, assignedEntitlement)),
+	}
+	rv = append(rv, ent.NewAssignmentEntitlement(resource, assignedEntitlement, assigmentOptions...))
+
+	assigmentOptions = []ent.EntitlementOption{
+		ent.WithGrantableTo(serviceAccountResourceType),
+		ent.WithDescription(fmt.Sprintf("Assigned to %s project", resource.DisplayName)),
+		ent.WithDisplayName(fmt.Sprintf("%s project %s", resource.DisplayName, assignedEntitlement)),
+	}
+	rv = append(rv, ent.NewAssignmentEntitlement(resource, assignedEntitlement, assigmentOptions...))
+
+	return rv, "", nil, nil
+
 }
 
 func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
