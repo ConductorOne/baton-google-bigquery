@@ -123,7 +123,6 @@ func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 	rv = append(rv, ent.NewAssignmentEntitlement(resource, assignedEntitlement, assigmentOptions...))
 
 	return rv, "", nil, nil
-
 }
 
 func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
