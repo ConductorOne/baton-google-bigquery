@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cloud.google.com/go/bigquery v1.60.0
-	github.com/conductorone/baton-sdk v0.2.42
+	github.com/conductorone/baton-sdk v0.2.45
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	go.uber.org/zap v1.27.0
 	google.golang.org/api v0.170.0
