@@ -148,7 +148,6 @@ func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 		}
 		membershipGrant := grant.NewGrant(resource, "member", principal)
 		rv = append(rv, membershipGrant)
-
 	}
 
 	return rv, "", nil, nil
