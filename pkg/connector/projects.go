@@ -113,7 +113,7 @@ func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 	var rv []*v2.Entitlement
 	assigmentOptions := []ent.EntitlementOption{
 		ent.WithGrantableTo(userResourceType),
-		ent.WithDescription(fmt.Sprintf("Member og %s project", resource.DisplayName)),
+		ent.WithDescription(fmt.Sprintf("Member of %s project", resource.DisplayName)),
 		ent.WithDisplayName(fmt.Sprintf("%s project %s", resource.DisplayName, memberEntitlement)),
 	}
 	rv = append(rv, ent.NewAssignmentEntitlement(resource, memberEntitlement, assigmentOptions...))
