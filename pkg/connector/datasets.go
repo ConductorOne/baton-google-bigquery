@@ -64,16 +64,19 @@ func (o *datasetBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return datasetResourceType
 }
 
-func datasetResource(dataset string) (*v2.Resource, error) {
+func datasetResource(ctx context.Context, datasetName string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
 	profile := map[string]interface{}{
-		"name": dataset,
+		"name": datasetName,
 	}
 
-	datasetTraitOptions := []rs.AppTraitOption{
-		rs.WithAppProfile(profile),
-	}
-
-	resource, err := rs.NewAppResource(dataset, datasetResourceType, dataset, datasetTraitOptions)
+	groupTraitOptions := []rs.GroupTraitOption{rs.WithGroupProfile(profile)}
+	resource, err := rs.NewGroupResource(
+		datasetName,
+		datasetResourceType,
+		datasetName,
+		groupTraitOptions,
+		rs.WithParentResourceID(parentResourceID),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +97,7 @@ func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 			return nil, "", nil, wrapError(err, "Unable to fetch dataset")
 		}
 
-		resource, err := datasetResource(dataset.DatasetID)
+		resource, err := datasetResource(ctx, dataset.DatasetID, parentResourceID)
 		if err != nil {
 			return nil, "", nil, wrapError(err, "Unable to create dataset resource")
 		}
@@ -155,9 +158,11 @@ func isUserOrServiceAccount(policy *iampb.Policy, memberGranted string) string {
 }
 
 func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
-	dataset, err := o.bigQueryClient.Dataset(resource.Id.Resource).Metadata(ctx)
+	var grants []*v2.Grant
+	datasetName := resource.Id.Resource
+	dataset, err := o.bigQueryClient.Dataset(datasetName).Metadata(ctx)
 	if err != nil {
-		return nil, "", nil, wrapError(err, "Unable to fetch dataset metadata")
+		return nil, "", nil, wrapError(err, "Unable to fetch dataset metadata: "+datasetName)
 	}
 
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
@@ -165,14 +170,13 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	})
 
 	if err != nil {
+		if policy == nil {
+			return grants, "", nil, nil
+		}
+
 		if !isPermissionDenied(ctx, err) {
 			return nil, "", nil, wrapError(err, "failed to get IAM policy")
 		}
-	}
-
-	var grants []*v2.Grant
-	if policy == nil {
-		return grants, "", nil, nil
 	}
 
 	for _, access := range dataset.Access {
