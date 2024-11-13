@@ -12,9 +12,12 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
+	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"google.golang.org/api/iterator"
 )
+
+const memberEntitlement = "member"
 
 type projectBuilder struct {
 	resourceType   *v2.ResourceType
@@ -110,23 +113,45 @@ func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 	var rv []*v2.Entitlement
 	assigmentOptions := []ent.EntitlementOption{
 		ent.WithGrantableTo(userResourceType),
-		ent.WithDescription(fmt.Sprintf("Assigned to %s project", resource.DisplayName)),
-		ent.WithDisplayName(fmt.Sprintf("%s project %s", resource.DisplayName, assignedEntitlement)),
+		ent.WithDescription(fmt.Sprintf("Member og %s project", resource.DisplayName)),
+		ent.WithDisplayName(fmt.Sprintf("%s project %s", resource.DisplayName, memberEntitlement)),
 	}
-	rv = append(rv, ent.NewAssignmentEntitlement(resource, assignedEntitlement, assigmentOptions...))
+	rv = append(rv, ent.NewAssignmentEntitlement(resource, memberEntitlement, assigmentOptions...))
 
 	assigmentOptions = []ent.EntitlementOption{
 		ent.WithGrantableTo(serviceAccountResourceType),
-		ent.WithDescription(fmt.Sprintf("Assigned to %s project", resource.DisplayName)),
-		ent.WithDisplayName(fmt.Sprintf("%s project %s", resource.DisplayName, assignedEntitlement)),
+		ent.WithDescription(fmt.Sprintf("Assigned of %s project", resource.DisplayName)),
+		ent.WithDisplayName(fmt.Sprintf("%s project %s", resource.DisplayName, memberEntitlement)),
 	}
-	rv = append(rv, ent.NewAssignmentEntitlement(resource, assignedEntitlement, assigmentOptions...))
+	rv = append(rv, ent.NewAssignmentEntitlement(resource, memberEntitlement, assigmentOptions...))
 
 	return rv, "", nil, nil
 }
 
 func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
-	return nil, "", nil, nil
+	var rv []*v2.Grant
+	iter := p.bigQueryClient.Datasets(ctx)
+	iter.ProjectID = resource.Id.Resource // Setting ProjectID
+	for {
+		dataset, err := iter.Next()
+		if errors.Is(err, iterator.Done) || dataset == nil {
+			break
+		}
+
+		if err != nil {
+			return nil, "", nil, wrapError(err, "Unable to fetch dataset")
+		}
+
+		principal := &v2.ResourceId{
+			ResourceType: datasetResourceType.Id,
+			Resource:     dataset.DatasetID,
+		}
+		membershipGrant := grant.NewGrant(resource, "member", principal)
+		rv = append(rv, membershipGrant)
+
+	}
+
+	return rv, "", nil, nil
 }
 
 func newProjectBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *projectBuilder {
