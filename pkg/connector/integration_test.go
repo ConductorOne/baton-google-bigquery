@@ -16,24 +16,6 @@ var (
 	ctxTest      = context.Background()
 )
 
-func TestDatasetBuilderList(t *testing.T) {
-	if jsonFilePath == "" {
-		t.Skip()
-	}
-
-	cliTest, err := getClientForTesting(ctxTest)
-	require.Nil(t, err)
-
-	o := &datasetBuilder{
-		resourceType:   datasetResourceType,
-		bigQueryClient: cliTest.BigQueryClient,
-		projectsClient: cliTest.ProjectsClient,
-	}
-
-	_, _, _, err = o.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})
-	require.Nil(t, err)
-}
-
 func getClientForTesting(ctx context.Context) (*GoogleBigQuery, error) {
 	return New(ctx, jsonFilePath)
 }
@@ -92,7 +74,8 @@ func TestCreateDataset(t *testing.T) {
 		Location: "US", // See https://cloud.google.com/bigquery/docs/locations
 	}
 
-	err = cliTest.BigQueryClient.Dataset("localdataset").Create(ctxTest, meta)
+	// it uses the default project id within the creds.json
+	err = cliTest.BigQueryClient.Dataset("localdataset_eu").Create(ctxTest, meta)
 	require.Nil(t, err)
 }
 
@@ -105,7 +88,7 @@ func TestDeleteDataset(t *testing.T) {
 	require.Nil(t, err)
 
 	// Delete the dataset. Delete will fail if the dataset is not empty.
-	err = cliTest.BigQueryClient.Dataset("localdataset").Delete(ctxTest)
+	err = cliTest.BigQueryClient.Dataset("localdataset_eu").Delete(ctxTest)
 	require.Nil(t, err)
 }
 
@@ -127,6 +110,27 @@ func TestRoleBuilderList(t *testing.T) {
 	require.Nil(t, err)
 }
 
+// To get the permission that you need to list datasets or get information on datasets,
+// you need the BigQuery Metadata Viewer (roles/bigquery.metadataViewer) IAM role on your project.
+// https://cloud.google.com/bigquery/docs/listing-datasets
+func TestDatasetBuilderList(t *testing.T) {
+	if jsonFilePath == "" {
+		t.Skip()
+	}
+
+	cliTest, err := getClientForTesting(ctxTest)
+	require.Nil(t, err)
+
+	o := &datasetBuilder{
+		resourceType:   datasetResourceType,
+		bigQueryClient: cliTest.BigQueryClient,
+		projectsClient: cliTest.ProjectsClient,
+	}
+
+	_, _, _, err = o.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})
+	require.Nil(t, err)
+}
+
 func TestDatasetGrants(t *testing.T) {
 	if jsonFilePath == "" {
 		t.Skip()
@@ -140,8 +144,10 @@ func TestDatasetGrants(t *testing.T) {
 		bigQueryClient: cliTest.BigQueryClient,
 		projectsClient: cliTest.ProjectsClient,
 	}
+	var datasetName = "central_ds"
 	_, _, _, err = d.Grants(ctxTest, &v2.Resource{
-		Id: &v2.ResourceId{ResourceType: datasetResourceType.Id, Resource: "localdataset"},
+		Id:               &v2.ResourceId{ResourceType: datasetResourceType.Id, Resource: datasetName},
+		ParentResourceId: &v2.ResourceId{ResourceType: projectResourceType.Id, Resource: "central-binder-441521-i4"},
 	}, &pagination.Token{})
 	require.Nil(t, err)
 }

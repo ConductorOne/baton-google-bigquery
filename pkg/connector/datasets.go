@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/iam/apiv1/iampb"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
@@ -85,27 +86,70 @@ func datasetResource(ctx context.Context, datasetName string, parentResourceID *
 }
 
 func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
-	var resources []*v2.Resource
-	iter := o.bigQueryClient.Datasets(ctx)
+	var (
+		resources []*v2.Resource
+		bag       = &pagination.Bag{}
+	)
+	err := bag.Unmarshal(pToken.Token)
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	if bag.Current() == nil {
+		bag.Push(pagination.PageState{
+			ResourceTypeID: projectResourceType.Id,
+		})
+	}
+
+	it := o.projectsClient.SearchProjects(ctx,
+		&resourcemanagerpb.SearchProjectsRequest{
+			Query:     "",
+			PageToken: bag.PageToken(),
+		},
+	)
+
 	for {
-		dataset, err := iter.Next()
-		if errors.Is(err, iterator.Done) || dataset == nil {
+		project, err := it.Next()
+		if errors.Is(err, iterator.Done) || project == nil {
 			break
 		}
 
-		if err != nil {
-			return nil, "", nil, wrapError(err, "Unable to fetch dataset")
-		}
+		iter := o.bigQueryClient.Datasets(ctx)
+		// Setting ProjectID on the returned iterator
+		iter.ProjectID = project.ProjectId
+		for {
+			dataset, err := iter.Next()
+			if errors.Is(err, iterator.Done) || dataset == nil {
+				break
+			}
 
-		resource, err := datasetResource(ctx, dataset.DatasetID, parentResourceID)
-		if err != nil {
-			return nil, "", nil, wrapError(err, "Unable to create dataset resource")
-		}
+			if err != nil {
+				return nil, "", nil, wrapError(err, "Unable to fetch dataset")
+			}
 
-		resources = append(resources, resource)
+			resource, err := datasetResource(ctx, dataset.DatasetID, &v2.ResourceId{
+				ResourceType: projectResourceType.Id,
+				Resource:     dataset.ProjectID,
+			})
+			if err != nil {
+				return nil, "", nil, wrapError(err, "Unable to create dataset resource")
+			}
+
+			resources = append(resources, resource)
+		}
 	}
 
-	return resources, "", nil, nil
+	err = bag.Next(it.PageInfo().Token)
+	if err != nil {
+		return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
+	}
+
+	pageToken, err := bag.Marshal()
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	return resources, pageToken, nil, nil
 }
 
 func (o *datasetBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
@@ -159,14 +203,16 @@ func isUserOrServiceAccount(policy *iampb.Policy, memberGranted string) string {
 
 func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	var grants []*v2.Grant
-	datasetName := resource.Id.Resource
-	dataset, err := o.bigQueryClient.Dataset(datasetName).Metadata(ctx)
+	datasetID := resource.Id.Resource
+	projectId := resource.ParentResourceId.Resource
+	ds := o.bigQueryClient.DatasetInProject(projectId, datasetID)
+	dataset, err := ds.Metadata(ctx)
 	if err != nil {
-		return nil, "", nil, wrapError(err, "Unable to fetch dataset metadata: "+datasetName)
+		return nil, "", nil, wrapError(err, "Unable to fetch dataset metadata (projectId:"+projectId+" datasetID:"+datasetID+")")
 	}
 
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
-		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
+		Resource: fmt.Sprintf("projects/%s", projectId),
 	})
 
 	if err != nil {
