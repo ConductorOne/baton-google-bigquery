@@ -132,6 +132,10 @@ func TestDatasetBuilderList(t *testing.T) {
 }
 
 func TestDatasetGrants(t *testing.T) {
+	var (
+		datasetID = "central_ds"
+		projectId = "central-binder-441521-i4"
+	)
 	if jsonFilePath == "" {
 		t.Skip()
 	}
@@ -144,10 +148,10 @@ func TestDatasetGrants(t *testing.T) {
 		bigQueryClient: cliTest.BigQueryClient,
 		projectsClient: cliTest.ProjectsClient,
 	}
-	var datasetName = "central_ds"
+
 	_, _, _, err = d.Grants(ctxTest, &v2.Resource{
-		Id:               &v2.ResourceId{ResourceType: datasetResourceType.Id, Resource: datasetName},
-		ParentResourceId: &v2.ResourceId{ResourceType: projectResourceType.Id, Resource: "central-binder-441521-i4"},
+		Id:               &v2.ResourceId{ResourceType: datasetResourceType.Id, Resource: datasetID},
+		ParentResourceId: &v2.ResourceId{ResourceType: projectResourceType.Id, Resource: projectId},
 	}, &pagination.Token{})
 	require.Nil(t, err)
 }
