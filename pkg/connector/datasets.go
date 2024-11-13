@@ -216,13 +216,13 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	})
 
 	if err != nil {
-		if policy == nil {
-			return grants, "", nil, nil
-		}
-
 		if !isPermissionDenied(ctx, err) {
 			return nil, "", nil, wrapError(err, "failed to get IAM policy")
 		}
+	}
+
+	if policy == nil {
+		return grants, "", nil, nil
 	}
 
 	for _, access := range dataset.Access {

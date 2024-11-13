@@ -57,13 +57,13 @@ func (o *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
 	})
 	if err != nil {
-		if policy == nil {
-			return resources, "", nil, nil
-		}
-
 		if !isPermissionDenied(ctx, err) {
 			return nil, "", nil, wrapError(err, "failed to get IAM policy")
 		}
+	}
+
+	if policy == nil {
+		return resources, "", nil, nil
 	}
 
 	for _, binding := range policy.Bindings {
