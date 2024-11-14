@@ -146,7 +146,7 @@ func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 			ResourceType: datasetResourceType.Id,
 			Resource:     dataset.DatasetID,
 		}
-		membershipGrant := grant.NewGrant(resource, "member", principal)
+		membershipGrant := grant.NewGrant(resource, memberEntitlement, principal)
 		rv = append(rv, membershipGrant)
 	}
 

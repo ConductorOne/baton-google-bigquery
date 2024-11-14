@@ -154,13 +154,13 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 		Resource: fmt.Sprintf("projects/%s", projectId),
 	})
 	if err != nil {
-		if policy == nil {
-			return grants, "", nil, nil
-		}
-
 		if !isPermissionDenied(ctx, err) {
 			return nil, "", nil, wrapError(err, "listing grants for roles failed")
 		}
+	}
+
+	if policy == nil {
+		return grants, "", nil, nil
 	}
 
 	for _, binding := range policy.Bindings {
