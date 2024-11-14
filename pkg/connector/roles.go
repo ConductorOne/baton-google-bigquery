@@ -2,18 +2,21 @@ package connector
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/iam/apiv1/iampb"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
+	"google.golang.org/api/iterator"
 )
 
 type roleBuilder struct {
@@ -24,22 +27,24 @@ type roleBuilder struct {
 
 const assignedEntitlement = "assigned"
 
-func (o *roleBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
+func (r *roleBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return roleResourceType
 }
 
-func roleResource(role string) (*v2.Resource, error) {
+func roleResource(role string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
 	roleName := removeRolesPrefix(role)
-
 	profile := map[string]interface{}{
 		"name": roleName,
 	}
-
 	roleTraitOptions := []rs.RoleTraitOption{
 		rs.WithRoleProfile(profile),
 	}
-
-	resource, err := rs.NewRoleResource(roleName, roleResourceType, role, roleTraitOptions)
+	resource, err := rs.NewRoleResource(roleName,
+		roleResourceType,
+		role,
+		roleTraitOptions,
+		rs.WithParentResourceID(parentResourceID),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -51,31 +56,75 @@ func removeRolesPrefix(role string) string {
 	return strings.TrimPrefix(role, "roles/")
 }
 
-func (o *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
-	var resources []*v2.Resource
-	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
-		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
-	})
+func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
+	var (
+		resources []*v2.Resource
+		bag       = &pagination.Bag{}
+	)
+	err := bag.Unmarshal(pToken.Token)
 	if err != nil {
-		if !isPermissionDenied(ctx, err) {
-			return nil, "", nil, wrapError(err, "failed to get IAM policy")
+		return nil, "", nil, err
+	}
+
+	if bag.Current() == nil {
+		bag.Push(pagination.PageState{
+			ResourceTypeID: projectResourceType.Id,
+		})
+	}
+
+	it := r.projectsClient.SearchProjects(ctx,
+		&resourcemanagerpb.SearchProjectsRequest{
+			Query:     "",
+			PageToken: bag.PageToken(),
+		},
+	)
+	for {
+		project, err := it.Next()
+		if errors.Is(err, iterator.Done) || project == nil {
+			break
 		}
-	}
 
-	if policy == nil {
-		return resources, "", nil, nil
-	}
-
-	for _, binding := range policy.Bindings {
-		resource, err := roleResource(binding.Role)
 		if err != nil {
-			return nil, "", nil, wrapError(err, "failed to create role resource")
+			return nil, "", nil, wrapError(err, "Unable to fetch project")
 		}
 
-		resources = append(resources, resource)
+		policy, err := r.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
+			Resource: fmt.Sprintf("projects/%s", project.ProjectId),
+		})
+		if err != nil {
+			if !isPermissionDenied(ctx, err) {
+				return nil, "", nil, wrapError(err, "failed to get IAM policy")
+			}
+		}
+
+		if policy == nil {
+			return resources, "", nil, nil
+		}
+
+		for _, binding := range policy.Bindings {
+			resource, err := roleResource(binding.Role, &v2.ResourceId{
+				ResourceType: projectResourceType.Id,
+				Resource:     project.ProjectId,
+			})
+			if err != nil {
+				return nil, "", nil, wrapError(err, "failed to create role resource")
+			}
+
+			resources = append(resources, resource)
+		}
 	}
 
-	return resources, "", nil, nil
+	err = bag.Next(it.PageInfo().Token)
+	if err != nil {
+		return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
+	}
+
+	pageToken, err := bag.Marshal()
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	return resources, pageToken, nil, nil
 }
 
 func (o *roleBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
@@ -100,8 +149,9 @@ func (o *roleBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *
 
 func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	var grants []*v2.Grant
+	projectId := resource.ParentResourceId.Resource
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
-		Resource: fmt.Sprintf("projects/%s", o.bigQueryClient.Project()),
+		Resource: fmt.Sprintf("projects/%s", projectId),
 	})
 	if err != nil {
 		if policy == nil {
@@ -121,14 +171,14 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 		for _, member := range binding.Members {
 			// TODO: handle group bindings
 			if isUser, user := isUser(member); isUser {
-				userResource, err := userResource(user)
+				userResource, err := userResource(user, nil)
 				if err != nil {
 					return nil, "", nil, wrapError(err, "failed to create user resource")
 				}
 
 				grants = append(grants, grant.NewGrant(resource, assignedEntitlement, userResource.Id))
 			} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
-				serviceAccountResource, err := serviceAccountResource(serviceAccount)
+				serviceAccountResource, err := serviceAccountResource(serviceAccount, nil)
 				if err != nil {
 					return nil, "", nil, wrapError(err, "failed to create service account resource")
 				}

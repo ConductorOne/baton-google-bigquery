@@ -258,14 +258,14 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 
 			for _, member := range binding.Members {
 				if isUser, user := isUser(member); isUser {
-					userResource, err := userResource(user)
+					userResource, err := userResource(user, nil)
 					if err != nil {
 						return nil, "", nil, wrapError(err, "Unable to create user resource")
 					}
 
 					grants = append(grants, grant.NewGrant(resource, e, userResource.Id))
 				} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
-					serviceAccountResource, err := serviceAccountResource(serviceAccount)
+					serviceAccountResource, err := serviceAccountResource(serviceAccount, nil)
 					if err != nil {
 						return nil, "", nil, wrapError(err, "Unable to create service account resource")
 					}
@@ -286,9 +286,9 @@ func (o *datasetBuilder) GetUserOwnerGrants(policy *iampb.Policy, resource *v2.R
 	)
 	switch isUserOrServiceAccount(policy, access.Entity) {
 	case serviceAccount:
-		res, err = serviceAccountResource(access.Entity)
+		res, err = serviceAccountResource(access.Entity, nil)
 	case user:
-		res, err = userResource(access.Entity)
+		res, err = userResource(access.Entity, nil)
 	}
 	if err != nil {
 		return nil, err
@@ -300,7 +300,7 @@ func (o *datasetBuilder) GetUserOwnerGrants(policy *iampb.Policy, resource *v2.R
 }
 
 func (o *datasetBuilder) GetRoleGrants(resource *v2.Resource, role string) ([]*v2.Grant, error) {
-	roleResource, err := roleResource(role)
+	roleResource, err := roleResource(role, nil)
 	if err != nil {
 		return nil, wrapError(err, "Unable to create role resource")
 	}
