@@ -289,6 +289,8 @@ func (o *datasetBuilder) GetUserOwnerGrants(policy *iampb.Policy, resource *v2.R
 		res, err = serviceAccountResource(access.Entity, nil)
 	case user:
 		res, err = userResource(access.Entity, nil)
+	default:
+		return nil, wrapError(fmt.Errorf("unknown entity type %s", access.Entity), "")
 	}
 	if err != nil {
 		return nil, err
