@@ -14,15 +14,18 @@ import (
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
 )
 
 const memberEntitlement = "member"
 
 type projectBuilder struct {
-	resourceType   *v2.ResourceType
-	projectsClient *resourcemanager.ProjectsClient
-	bigQueryClient *bigquery.Client
+	resourceType      *v2.ResourceType
+	projectsClient    *resourcemanager.ProjectsClient
+	bigQueryClient    *bigquery.Client
+	ProjectsWhitelist []string
 }
 
 func (p *projectBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
@@ -60,6 +63,7 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 		resources []*v2.Resource
 		bag       = &pagination.Bag{}
 	)
+	l := ctxzap.Extract(ctx)
 	err := bag.Unmarshal(pToken.Token)
 	if err != nil {
 		return nil, "", nil, err
@@ -79,8 +83,8 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 	)
 
 	for {
-		projects, err := it.Next()
-		if errors.Is(err, iterator.Done) || projects == nil {
+		project, err := it.Next()
+		if errors.Is(err, iterator.Done) || project == nil {
 			break
 		}
 
@@ -88,7 +92,16 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 			return nil, "", nil, wrapError(err, "Unable to fetch projects")
 		}
 
-		resource, err := projectResource(projects)
+		if len(p.ProjectsWhitelist) > 0 && !isWhiteListed(p.ProjectsWhitelist, project.ProjectId) {
+			l.Warn(
+				"baton-google-bigquery: project is not whitelisted",
+				zap.String("projectId", project.ProjectId),
+			)
+
+			return resources, "", nil, nil
+		}
+
+		resource, err := projectResource(project)
 		if err != nil {
 			return nil, "", nil, wrapError(err, "Unable to create project resource")
 		}
@@ -153,10 +166,14 @@ func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	return rv, "", nil, nil
 }
 
-func newProjectBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *projectBuilder {
+func newProjectBuilder(projectsClient *resourcemanager.ProjectsClient,
+	bigQueryClient *bigquery.Client,
+	projectsWhitelist []string,
+) *projectBuilder {
 	return &projectBuilder{
-		resourceType:   projectResourceType,
-		projectsClient: projectsClient,
-		bigQueryClient: bigQueryClient,
+		resourceType:      projectResourceType,
+		projectsClient:    projectsClient,
+		bigQueryClient:    bigQueryClient,
+		ProjectsWhitelist: projectsWhitelist,
 	}
 }

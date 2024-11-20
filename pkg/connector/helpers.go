@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/googleapis/gax-go/v2/apierror"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
@@ -48,4 +49,10 @@ func isPermissionDenied(ctx context.Context, err error) bool {
 	}
 
 	return true
+}
+
+func isWhiteListed(projectIDs []string, projectId string) bool {
+	return slices.IndexFunc(projectIDs, func(c string) bool {
+		return c == projectId
+	}) != NF
 }

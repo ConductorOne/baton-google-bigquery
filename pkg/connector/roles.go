@@ -16,13 +16,16 @@ import (
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
 )
 
 type roleBuilder struct {
-	resourceType   *v2.ResourceType
-	projectsClient *resourcemanager.ProjectsClient
-	bigQueryClient *bigquery.Client
+	resourceType      *v2.ResourceType
+	projectsClient    *resourcemanager.ProjectsClient
+	bigQueryClient    *bigquery.Client
+	ProjectsWhitelist []string
 }
 
 const assignedEntitlement = "assigned"
@@ -61,6 +64,7 @@ func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		resources []*v2.Resource
 		bag       = &pagination.Bag{}
 	)
+	l := ctxzap.Extract(ctx)
 	err := bag.Unmarshal(pToken.Token)
 	if err != nil {
 		return nil, "", nil, err
@@ -86,6 +90,15 @@ func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 
 		if err != nil {
 			return nil, "", nil, wrapError(err, "Unable to fetch project")
+		}
+
+		if len(r.ProjectsWhitelist) > 0 && !isWhiteListed(r.ProjectsWhitelist, project.ProjectId) {
+			l.Warn(
+				"baton-google-bigquery: project is not whitelisted",
+				zap.String("projectId", project.ProjectId),
+			)
+
+			return resources, "", nil, nil
 		}
 
 		policy, err := r.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
@@ -191,10 +204,14 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 	return grants, "", nil, nil
 }
 
-func newRoleBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *roleBuilder {
+func newRoleBuilder(projectsClient *resourcemanager.ProjectsClient,
+	bigQueryClient *bigquery.Client,
+	projectsWhitelist []string,
+) *roleBuilder {
 	return &roleBuilder{
-		resourceType:   roleResourceType,
-		projectsClient: projectsClient,
-		bigQueryClient: bigQueryClient,
+		resourceType:      roleResourceType,
+		projectsClient:    projectsClient,
+		bigQueryClient:    bigQueryClient,
+		ProjectsWhitelist: projectsWhitelist,
 	}
 }

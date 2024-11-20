@@ -14,18 +14,19 @@ import (
 )
 
 type GoogleBigQuery struct {
-	ProjectsClient *resourcemanager.ProjectsClient
-	BigQueryClient *bigquery.Client
+	ProjectsClient    *resourcemanager.ProjectsClient
+	BigQueryClient    *bigquery.Client
+	ProjectsWhitelist []string
 }
 
 // ResourceSyncers returns a ResourceSyncer for each resource type that should be synced from the upstream service.
 func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
 	return []connectorbuilder.ResourceSyncer{
-		newUserBuilder(d.ProjectsClient, d.BigQueryClient),
-		newServiceAccountBuilder(d.ProjectsClient, d.BigQueryClient),
-		newRoleBuilder(d.ProjectsClient, d.BigQueryClient),
-		newDatasetBuilder(d.BigQueryClient, d.ProjectsClient),
-		newProjectBuilder(d.ProjectsClient, d.BigQueryClient),
+		newUserBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist),
+		newServiceAccountBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist),
+		newRoleBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist),
+		newDatasetBuilder(d.BigQueryClient, d.ProjectsClient, d.ProjectsWhitelist),
+		newProjectBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist),
 	}
 }
 
@@ -38,8 +39,8 @@ func (d *GoogleBigQuery) Asset(ctx context.Context, asset *v2.AssetRef) (string,
 // Metadata returns metadata about the connector.
 func (d *GoogleBigQuery) Metadata(ctx context.Context) (*v2.ConnectorMetadata, error) {
 	return &v2.ConnectorMetadata{
-		DisplayName: "My Baton Connector",
-		Description: "The template implementation of a baton connector",
+		DisplayName: "Google Bigquery Connector",
+		Description: "Connector syncing users, projects, datasets, roles and service accounts from Bigquery.",
 	}, nil
 }
 
@@ -54,19 +55,19 @@ func (d *GoogleBigQuery) Validate(ctx context.Context) (annotations.Annotations,
 }
 
 // New returns a new instance of the connector.
-func New(ctx context.Context, credentialsJSONFilePath string) (*GoogleBigQuery, error) {
+func New(ctx context.Context, projectsWhitelist []string, credentialsJSONFilePath string) (*GoogleBigQuery, error) {
 	opt := option.WithCredentialsFile(credentialsJSONFilePath)
 
-	return createClient(ctx, opt)
+	return createClient(ctx, projectsWhitelist, opt)
 }
 
-func NewFromJSONBytes(ctx context.Context, credentialsJSON []byte) (*GoogleBigQuery, error) {
+func NewFromJSONBytes(ctx context.Context, projectsWhitelist []string, credentialsJSON []byte) (*GoogleBigQuery, error) {
 	opt := option.WithCredentialsJSON(credentialsJSON)
 
-	return createClient(ctx, opt)
+	return createClient(ctx, projectsWhitelist, opt)
 }
 
-func createClient(ctx context.Context, opts ...option.ClientOption) (*GoogleBigQuery, error) {
+func createClient(ctx context.Context, projectsWhitelist []string, opts ...option.ClientOption) (*GoogleBigQuery, error) {
 	projectsClient, err := resourcemanager.NewProjectsClient(ctx, opts...)
 	if err != nil {
 		return nil, err
@@ -78,7 +79,8 @@ func createClient(ctx context.Context, opts ...option.ClientOption) (*GoogleBigQ
 	}
 
 	return &GoogleBigQuery{
-		ProjectsClient: projectsClient,
-		BigQueryClient: bigQueryClient,
+		ProjectsClient:    projectsClient,
+		BigQueryClient:    bigQueryClient,
+		ProjectsWhitelist: projectsWhitelist,
 	}, nil
 }

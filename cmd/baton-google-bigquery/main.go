@@ -19,11 +19,13 @@ const (
 	version                 = "dev"
 	connectorName           = "baton-google-bigquery"
 	credentialsJSONFilePath = "credentials-json-file-path"
+	projectsWhitelist       = "projects-whitelist"
 )
 
 var (
 	credentialsJSONFilePathField = field.StringField(credentialsJSONFilePath, field.WithRequired(true), field.WithDescription("JSON credentials file name for the Google identity platform account."))
-	configurationFields          = []field.SchemaField{credentialsJSONFilePathField}
+	projectsWhitelistField       = field.StringField(projectsWhitelist, field.WithRequired(false), field.WithDescription("List of project ids to sync."))
+	configurationFields          = []field.SchemaField{credentialsJSONFilePathField, projectsWhitelistField}
 )
 
 func main() {
@@ -48,7 +50,10 @@ func main() {
 
 func getConnector(ctx context.Context, cfg *viper.Viper) (types.ConnectorServer, error) {
 	l := ctxzap.Extract(ctx)
-	cb, err := connector.New(ctx, cfg.GetString(credentialsJSONFilePath))
+	cb, err := connector.New(ctx,
+		cfg.GetStringSlice(projectsWhitelist),
+		cfg.GetString(credentialsJSONFilePath),
+	)
 	if err != nil {
 		l.Error("error creating connector", zap.Error(err))
 		return nil, err

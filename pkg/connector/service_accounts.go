@@ -14,13 +14,16 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
 )
 
 type serviceAccountBuilder struct {
-	resourceType   *v2.ResourceType
-	ProjectsClient *resourcemanager.ProjectsClient
-	BigQueryClient *bigquery.Client
+	resourceType      *v2.ResourceType
+	ProjectsClient    *resourcemanager.ProjectsClient
+	BigQueryClient    *bigquery.Client
+	ProjectsWhitelist []string
 }
 
 func (o *serviceAccountBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
@@ -54,6 +57,7 @@ func (o *serviceAccountBuilder) List(ctx context.Context, parentResourceID *v2.R
 		resources []*v2.Resource
 		bag       = &pagination.Bag{}
 	)
+	l := ctxzap.Extract(ctx)
 	err := bag.Unmarshal(pToken.Token)
 	if err != nil {
 		return nil, "", nil, err
@@ -79,6 +83,15 @@ func (o *serviceAccountBuilder) List(ctx context.Context, parentResourceID *v2.R
 
 		if err != nil {
 			return nil, "", nil, wrapError(err, "Unable to fetch project")
+		}
+
+		if len(o.ProjectsWhitelist) > 0 && !isWhiteListed(o.ProjectsWhitelist, project.ProjectId) {
+			l.Warn(
+				"baton-google-bigquery: project is not whitelisted",
+				zap.String("projectId", project.ProjectId),
+			)
+
+			return resources, "", nil, nil
 		}
 
 		policy, err := o.ProjectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
@@ -145,10 +158,14 @@ func (o *serviceAccountBuilder) Grants(ctx context.Context, resource *v2.Resourc
 	return nil, "", nil, nil
 }
 
-func newServiceAccountBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *serviceAccountBuilder {
+func newServiceAccountBuilder(projectsClient *resourcemanager.ProjectsClient,
+	bigQueryClient *bigquery.Client,
+	projectsWhitelist []string,
+) *serviceAccountBuilder {
 	return &serviceAccountBuilder{
-		resourceType:   serviceAccountResourceType,
-		ProjectsClient: projectsClient,
-		BigQueryClient: bigQueryClient,
+		resourceType:      serviceAccountResourceType,
+		ProjectsClient:    projectsClient,
+		BigQueryClient:    bigQueryClient,
+		ProjectsWhitelist: projectsWhitelist,
 	}
 }

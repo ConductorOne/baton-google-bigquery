@@ -15,13 +15,16 @@ import (
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
 	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
 )
 
 type datasetBuilder struct {
-	resourceType   *v2.ResourceType
-	bigQueryClient *bigquery.Client
-	projectsClient *resourcemanager.ProjectsClient
+	resourceType      *v2.ResourceType
+	bigQueryClient    *bigquery.Client
+	projectsClient    *resourcemanager.ProjectsClient
+	ProjectsWhitelist []string
 }
 
 const (
@@ -90,6 +93,7 @@ func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 		resources []*v2.Resource
 		bag       = &pagination.Bag{}
 	)
+	l := ctxzap.Extract(ctx)
 	err := bag.Unmarshal(pToken.Token)
 	if err != nil {
 		return nil, "", nil, err
@@ -117,6 +121,15 @@ func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 		iter := o.bigQueryClient.Datasets(ctx)
 		// Setting ProjectID on the returned iterator
 		iter.ProjectID = project.ProjectId
+		if len(o.ProjectsWhitelist) > 0 && !isWhiteListed(o.ProjectsWhitelist, project.ProjectId) {
+			l.Warn(
+				"baton-google-bigquery: project is not whitelisted",
+				zap.String("projectId", project.ProjectId),
+			)
+
+			return resources, "", nil, nil
+		}
+
 		for {
 			dataset, err := iter.Next()
 			if errors.Is(err, iterator.Done) || dataset == nil {
@@ -312,10 +325,14 @@ func (o *datasetBuilder) GetRoleGrants(resource *v2.Resource, role string) ([]*v
 	}, nil
 }
 
-func newDatasetBuilder(bigQueryClient *bigquery.Client, projectsClient *resourcemanager.ProjectsClient) *datasetBuilder {
+func newDatasetBuilder(bigQueryClient *bigquery.Client,
+	projectsClient *resourcemanager.ProjectsClient,
+	projectsWhitelist []string,
+) *datasetBuilder {
 	return &datasetBuilder{
-		resourceType:   datasetResourceType,
-		bigQueryClient: bigQueryClient,
-		projectsClient: projectsClient,
+		resourceType:      datasetResourceType,
+		bigQueryClient:    bigQueryClient,
+		projectsClient:    projectsClient,
+		ProjectsWhitelist: projectsWhitelist,
 	}
 }
