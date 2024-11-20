@@ -42,9 +42,9 @@ func isPermissionDenied(ctx context.Context, err error) bool {
 
 			return false
 		}
-
+		// log PermissionDenied error for our records
 		l.Error(
-			"baton-google-bigquery: failed to list resources <PermissionDenied>",
+			"baton-google-bigquery: failed to get resources <PermissionDenied>",
 			zap.String("reason", ae.Reason()),
 			zap.Any("grpc_status", ae.GRPCStatus().Err()),
 			zap.Any("details", ae.Details().ErrorInfo),

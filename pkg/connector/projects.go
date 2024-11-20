@@ -52,8 +52,8 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 	)
 
 	for {
-		projects, err := it.Next()
-		if errors.Is(err, iterator.Done) || projects == nil {
+		project, err := it.Next()
+		if errors.Is(err, iterator.Done) || project == nil {
 			break
 		}
 
@@ -63,7 +63,7 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 			}
 		}
 
-		resource, err := projectResource(projects)
+		resource, err := projectResource(project)
 		if err != nil {
 			return nil, "", nil, wrapError(err, "Unable to create project resource")
 		}
