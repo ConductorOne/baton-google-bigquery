@@ -14,7 +14,6 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
-	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"google.golang.org/api/iterator"
 )
 
@@ -65,26 +64,6 @@ func (o *datasetBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return datasetResourceType
 }
 
-func datasetResource(ctx context.Context, datasetName string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
-	profile := map[string]interface{}{
-		"name": datasetName,
-	}
-
-	groupTraitOptions := []rs.GroupTraitOption{rs.WithGroupProfile(profile)}
-	resource, err := rs.NewGroupResource(
-		datasetName,
-		datasetResourceType,
-		datasetName,
-		groupTraitOptions,
-		rs.WithParentResourceID(parentResourceID),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return resource, nil
-}
-
 func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
 	var (
 		resources []*v2.Resource
@@ -114,9 +93,14 @@ func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 			break
 		}
 
+		if err != nil {
+			if !isPermissionDenied(ctx, err) {
+				return nil, "", nil, wrapError(err, "Unable to fetch projects")
+			}
+		}
+
 		iter := o.bigQueryClient.Datasets(ctx)
-		// Setting ProjectID on the returned iterator
-		iter.ProjectID = project.ProjectId
+		iter.ProjectID = project.ProjectId // Setting ProjectID on the returned iterator
 		for {
 			dataset, err := iter.Next()
 			if errors.Is(err, iterator.Done) || dataset == nil {
@@ -124,7 +108,9 @@ func (o *datasetBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 			}
 
 			if err != nil {
-				return nil, "", nil, wrapError(err, "Unable to fetch dataset")
+				if !isPermissionDenied(ctx, err) {
+					return nil, "", nil, wrapError(err, "Unable to fetch dataset")
+				}
 			}
 
 			resource, err := datasetResource(ctx, dataset.DatasetID, &v2.ResourceId{
@@ -186,21 +172,6 @@ func (o *datasetBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 	return rv, "", nil, nil
 }
 
-func isUserOrServiceAccount(policy *iampb.Policy, memberGranted string) string {
-	for _, binding := range policy.Bindings {
-		for _, member := range binding.Members {
-			switch member {
-			case fmt.Sprintf("%s:%s", serviceAccount, memberGranted):
-				return serviceAccount
-			case fmt.Sprintf("%s:%s", user, memberGranted):
-				return user
-			}
-		}
-	}
-
-	return ""
-}
-
 func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	var grants []*v2.Grant
 	datasetID := resource.Id.Resource
@@ -208,13 +179,14 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	ds := o.bigQueryClient.DatasetInProject(projectId, datasetID)
 	dataset, err := ds.Metadata(ctx)
 	if err != nil {
-		return nil, "", nil, wrapError(err, "Unable to fetch dataset metadata (projectId:"+projectId+" datasetID:"+datasetID+")")
+		if !isPermissionDenied(ctx, err) {
+			return nil, "", nil, wrapError(err, "Unable to fetch dataset metadata (projectId:"+projectId+" datasetID:"+datasetID+")")
+		}
 	}
 
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", projectId),
 	})
-
 	if err != nil {
 		if !isPermissionDenied(ctx, err) {
 			return nil, "", nil, wrapError(err, "failed to get IAM policy")

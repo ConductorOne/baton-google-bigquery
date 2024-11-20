@@ -13,7 +13,6 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
-	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"google.golang.org/api/iterator"
 )
 
@@ -27,32 +26,6 @@ type projectBuilder struct {
 
 func (p *projectBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return projectResourceType
-}
-
-func projectResource(projects *resourcemanagerpb.Project) (*v2.Resource, error) {
-	var opts []rs.ResourceOption
-	profile := map[string]interface{}{
-		"id":          projects.ProjectId,
-		"name":        projects.Name,
-		"displayName": projects.DisplayName,
-	}
-
-	projectTraitOptions := []rs.AppTraitOption{
-		rs.WithAppProfile(profile),
-	}
-
-	opts = append(opts, rs.WithAppTrait(projectTraitOptions...))
-	resource, err := rs.NewResource(
-		projects.DisplayName,
-		projectResourceType,
-		projects.ProjectId,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return resource, nil
 }
 
 func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
@@ -85,7 +58,9 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 		}
 
 		if err != nil {
-			return nil, "", nil, wrapError(err, "Unable to fetch projects")
+			if !isPermissionDenied(ctx, err) {
+				return nil, "", nil, wrapError(err, "Unable to fetch projects")
+			}
 		}
 
 		resource, err := projectResource(projects)
@@ -139,14 +114,17 @@ func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 		}
 
 		if err != nil {
-			return nil, "", nil, wrapError(err, "Unable to fetch dataset")
+			if !isPermissionDenied(ctx, err) {
+				return nil, "", nil, wrapError(err, "Unable to fetch dataset")
+			}
 		}
 
-		principal := &v2.ResourceId{
-			ResourceType: datasetResourceType.Id,
-			Resource:     dataset.DatasetID,
-		}
-		membershipGrant := grant.NewGrant(resource, memberEntitlement, principal)
+		membershipGrant := grant.NewGrant(resource,
+			memberEntitlement,
+			&v2.ResourceId{
+				ResourceType: datasetResourceType.Id,
+				Resource:     dataset.DatasetID,
+			})
 		rv = append(rv, membershipGrant)
 	}
 
