@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/iam/apiv1/iampb"
@@ -13,7 +12,6 @@ import (
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
-	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
@@ -28,30 +26,6 @@ type userBuilder struct {
 
 func (o *userBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return userResourceType
-}
-
-func userResource(member string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
-	profile := map[string]interface{}{
-		"email": member,
-	}
-
-	userTrairs := []rs.UserTraitOption{
-		rs.WithUserProfile(profile),
-		rs.WithUserLogin(member),
-		rs.WithStatus(v2.UserTrait_Status_STATUS_ENABLED),
-	}
-
-	resource, err := rs.NewUserResource(member,
-		userResourceType,
-		member,
-		userTrairs,
-		rs.WithParentResourceID(parentResourceID),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return resource, nil
 }
 
 // List returns all the users from the database as resource objects.
@@ -86,7 +60,9 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		}
 
 		if err != nil {
-			return nil, "", nil, wrapError(err, "Unable to fetch project")
+			if !isPermissionDenied(ctx, err) {
+				return nil, "", nil, wrapError(err, "Unable to fetch project")
+			}
 		}
 
 		if len(o.ProjectsWhitelist) > 0 && !isWhiteListed(o.ProjectsWhitelist, project.ProjectId) {
@@ -142,14 +118,6 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 	}
 
 	return resources, pageToken, nil, nil
-}
-
-func isUser(member string) (bool, string) {
-	if strings.HasPrefix(member, "user:") {
-		return true, strings.TrimPrefix(member, "user:")
-	}
-
-	return false, ""
 }
 
 // Entitlements always returns an empty slice for users.

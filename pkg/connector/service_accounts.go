@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/iam/apiv1/iampb"
@@ -13,7 +12,6 @@ import (
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
-	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
@@ -28,26 +26,6 @@ type serviceAccountBuilder struct {
 
 func (o *serviceAccountBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return serviceAccountResourceType
-}
-
-func serviceAccountResource(member string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
-	profile := map[string]interface{}{
-		"email": member,
-	}
-	serviceAccountTraits := []rs.AppTraitOption{
-		rs.WithAppProfile(profile),
-	}
-	resource, err := rs.NewAppResource(member,
-		serviceAccountResourceType,
-		member,
-		serviceAccountTraits,
-		rs.WithParentResourceID(parentResourceID),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return resource, nil
 }
 
 // List returns all the users from the database as resource objects.
@@ -82,7 +60,9 @@ func (o *serviceAccountBuilder) List(ctx context.Context, parentResourceID *v2.R
 		}
 
 		if err != nil {
-			return nil, "", nil, wrapError(err, "Unable to fetch project")
+			if !isPermissionDenied(ctx, err) {
+				return nil, "", nil, wrapError(err, "Unable to fetch project")
+			}
 		}
 
 		if len(o.ProjectsWhitelist) > 0 && !isWhiteListed(o.ProjectsWhitelist, project.ProjectId) {
@@ -138,14 +118,6 @@ func (o *serviceAccountBuilder) List(ctx context.Context, parentResourceID *v2.R
 	}
 
 	return resources, pageToken, nil, nil
-}
-
-func isServiceAccount(member string) (bool, string) {
-	if strings.HasPrefix(member, "serviceAccount:") {
-		return true, strings.TrimPrefix(member, "serviceAccount:")
-	}
-
-	return false, ""
 }
 
 // Entitlements always returns an empty slice for users.

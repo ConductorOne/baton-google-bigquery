@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/iam/apiv1/iampb"
@@ -15,7 +14,6 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
-	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
@@ -32,31 +30,6 @@ const assignedEntitlement = "assigned"
 
 func (r *roleBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return roleResourceType
-}
-
-func roleResource(role string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
-	roleName := removeRolesPrefix(role)
-	profile := map[string]interface{}{
-		"name": roleName,
-	}
-	roleTraitOptions := []rs.RoleTraitOption{
-		rs.WithRoleProfile(profile),
-	}
-	resource, err := rs.NewRoleResource(roleName,
-		roleResourceType,
-		role,
-		roleTraitOptions,
-		rs.WithParentResourceID(parentResourceID),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return resource, nil
-}
-
-func removeRolesPrefix(role string) string {
-	return strings.TrimPrefix(role, "roles/")
 }
 
 func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
@@ -89,7 +62,9 @@ func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		}
 
 		if err != nil {
-			return nil, "", nil, wrapError(err, "Unable to fetch project")
+			if !isPermissionDenied(ctx, err) {
+				return nil, "", nil, wrapError(err, "Unable to fetch project")
+			}
 		}
 
 		if len(r.ProjectsWhitelist) > 0 && !isWhiteListed(r.ProjectsWhitelist, project.ProjectId) {
