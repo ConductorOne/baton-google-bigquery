@@ -162,7 +162,17 @@ func (o *roleBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *
 
 func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	var grants []*v2.Grant
+	l := ctxzap.Extract(ctx)
 	projectId := resource.ParentResourceId.Resource
+	if len(o.ProjectsWhitelist) > 0 && !isWhiteListed(o.ProjectsWhitelist, projectId) {
+		l.Warn(
+			"baton-google-bigquery: project is not whitelisted",
+			zap.String("projectId", projectId),
+		)
+
+		return grants, "", nil, nil
+	}
+
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
 		Resource: fmt.Sprintf("projects/%s", projectId),
 	})

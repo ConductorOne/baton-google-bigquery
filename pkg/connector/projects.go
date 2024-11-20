@@ -143,8 +143,18 @@ func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 
 func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	var rv []*v2.Grant
+	l := ctxzap.Extract(ctx)
 	iter := p.bigQueryClient.Datasets(ctx)
 	iter.ProjectID = resource.Id.Resource // Setting ProjectID
+	if len(p.ProjectsWhitelist) > 0 && !isWhiteListed(p.ProjectsWhitelist, iter.ProjectID) {
+		l.Warn(
+			"baton-google-bigquery: project is not whitelisted",
+			zap.String("projectId", iter.ProjectID),
+		)
+
+		return rv, "", nil, nil
+	}
+
 	for {
 		dataset, err := iter.Next()
 		if errors.Is(err, iterator.Done) || dataset == nil {

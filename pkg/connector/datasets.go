@@ -216,12 +216,22 @@ func isUserOrServiceAccount(policy *iampb.Policy, memberGranted string) string {
 
 func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	var grants []*v2.Grant
+	l := ctxzap.Extract(ctx)
 	datasetID := resource.Id.Resource
 	projectId := resource.ParentResourceId.Resource
 	ds := o.bigQueryClient.DatasetInProject(projectId, datasetID)
 	dataset, err := ds.Metadata(ctx)
 	if err != nil {
 		return nil, "", nil, wrapError(err, "Unable to fetch dataset metadata (projectId:"+projectId+" datasetID:"+datasetID+")")
+	}
+
+	if len(o.ProjectsWhitelist) > 0 && !isWhiteListed(o.ProjectsWhitelist, projectId) {
+		l.Warn(
+			"baton-google-bigquery: project is not whitelisted",
+			zap.String("projectId", projectId),
+		)
+
+		return grants, "", nil, nil
 	}
 
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
