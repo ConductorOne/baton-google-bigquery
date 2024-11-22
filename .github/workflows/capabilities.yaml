@@ -22,9 +22,14 @@ jobs:
 
       - name: Build
         run: go build -o connector ./cmd/baton-google-bigquery
+      - name: Write credentials to file
+        run: |
+          cat << EOF > ./creds.json
+          ${{ secrets.BATON_CREDENTIALS_JSON }}
+          EOF
 
       - name: Run and save output
-        run: ./connector capabilities > baton_capabilities.json
+        run: ./connector capabilities --credentials-json-file-path=creds.json > baton_capabilities.json
 
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
