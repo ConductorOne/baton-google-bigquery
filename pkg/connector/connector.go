@@ -17,6 +17,7 @@ type GoogleBigQuery struct {
 	ProjectsClient    *resourcemanager.ProjectsClient
 	BigQueryClient    *bigquery.Client
 	ProjectsWhitelist []string
+	Opts              []option.ClientOption
 }
 
 // ResourceSyncers returns a ResourceSyncer for each resource type that should be synced from the upstream service.
@@ -27,7 +28,7 @@ func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder
 		newRoleBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist),
 		newDatasetBuilder(d.BigQueryClient, d.ProjectsClient, d.ProjectsWhitelist),
 		newProjectBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist),
-		newPocBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist),
+		newPocBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist, d.Opts),
 	}
 }
 
@@ -83,5 +84,6 @@ func createClient(ctx context.Context, projectsWhitelist []string, opts ...optio
 		ProjectsClient:    projectsClient,
 		BigQueryClient:    bigQueryClient,
 		ProjectsWhitelist: projectsWhitelist,
+		Opts:              opts,
 	}, nil
 }
