@@ -17,7 +17,7 @@ var (
 )
 
 func getClientForTesting(ctx context.Context) (*GoogleBigQuery, error) {
-	return New(ctx, jsonFilePath)
+	return New(ctx, []string{"project1", "project2"}, jsonFilePath)
 }
 
 func TestUserBuilderList(t *testing.T) {

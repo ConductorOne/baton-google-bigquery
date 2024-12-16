@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"cloud.google.com/go/iam/apiv1/iampb"
@@ -199,4 +200,10 @@ func isServiceAccount(member string) (bool, string) {
 	}
 
 	return false, ""
+}
+
+func isWhiteListed(projectIDs []string, projectId string) bool {
+	return slices.IndexFunc(projectIDs, func(c string) bool {
+		return c == projectId
+	}) != NF
 }
