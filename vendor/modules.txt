@@ -688,6 +688,7 @@ golang.org/x/xerrors/internal
 # google.golang.org/api v0.170.0
 ## explicit; go 1.19
 google.golang.org/api/bigquery/v2
+google.golang.org/api/cloudresourcemanager/v1
 google.golang.org/api/googleapi
 google.golang.org/api/googleapi/transport
 google.golang.org/api/internal

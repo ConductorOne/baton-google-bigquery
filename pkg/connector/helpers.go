@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"cloud.google.com/go/iam/apiv1/iampb"
@@ -199,4 +200,30 @@ func isServiceAccount(member string) (bool, string) {
 	}
 
 	return false, ""
+}
+
+func isWhiteListed(projectIDs []string, projectId string) bool {
+	return slices.IndexFunc(projectIDs, func(c string) bool {
+		return c == projectId
+	}) != NF
+}
+
+func pocResource(ctx context.Context, datasetName string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
+	profile := map[string]interface{}{
+		"name": datasetName,
+	}
+
+	groupTraitOptions := []rs.GroupTraitOption{rs.WithGroupProfile(profile)}
+	resource, err := rs.NewGroupResource(
+		datasetName,
+		pocResourceType,
+		datasetName,
+		groupTraitOptions,
+		rs.WithParentResourceID(parentResourceID),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return resource, nil
 }
