@@ -33,4 +33,9 @@ var (
 		DisplayName: "Project",
 		Description: "Project of Google BigQuery",
 	}
+	pocResourceType = &v2.ResourceType{
+		Id:          "poc",
+		DisplayName: "poc",
+		Description: "poc of Google BigQuery",
+	}
 )

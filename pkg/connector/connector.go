@@ -27,6 +27,7 @@ func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder
 		newRoleBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist),
 		newDatasetBuilder(d.BigQueryClient, d.ProjectsClient, d.ProjectsWhitelist),
 		newProjectBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist),
+		newPocBuilder(d.ProjectsClient, d.BigQueryClient, d.ProjectsWhitelist),
 	}
 }
 
