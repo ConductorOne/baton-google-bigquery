@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cloud.google.com/go/bigquery v1.60.0
-	github.com/conductorone/baton-sdk v0.2.42
+	github.com/conductorone/baton-sdk v0.2.58
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	go.uber.org/zap v1.27.0
 	google.golang.org/api v0.170.0
@@ -12,9 +12,11 @@ require (
 
 require (
 	cloud.google.com/go/longrunning v0.5.6 // indirect
-	github.com/allegro/bigcache/v3 v3.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
+	github.com/dolthub/maphash v0.1.0 // indirect
+	github.com/gammazero/deque v0.2.1 // indirect
+	github.com/maypok86/otter v1.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
