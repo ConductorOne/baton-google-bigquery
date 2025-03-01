@@ -1,6 +1,6 @@
 module github.com/conductorone/baton-google-bigquery
 
-go 1.21
+go 1.23
 
 require (
 	cloud.google.com/go/bigquery v1.60.0
