@@ -55,7 +55,7 @@ func isPermissionDenied(ctx context.Context, err error) bool {
 	return true
 }
 
-func userResource(member string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
+func userResource(member string, parentResourceID *v2.ResourceId, trait rs.UserTraitOption) (*v2.Resource, error) {
 	profile := map[string]interface{}{
 		"email": member,
 	}
@@ -65,31 +65,14 @@ func userResource(member string, parentResourceID *v2.ResourceId) (*v2.Resource,
 		rs.WithUserLogin(member),
 		rs.WithStatus(v2.UserTrait_Status_STATUS_ENABLED),
 	}
+	if trait != nil {
+		userTrairs = append(userTrairs, trait)
+	}
 
 	resource, err := rs.NewUserResource(member,
 		userResourceType,
 		member,
 		userTrairs,
-		rs.WithParentResourceID(parentResourceID),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return resource, nil
-}
-
-func serviceAccountResource(member string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
-	profile := map[string]interface{}{
-		"email": member,
-	}
-	serviceAccountTraits := []rs.AppTraitOption{
-		rs.WithAppProfile(profile),
-	}
-	resource, err := rs.NewAppResource(member,
-		serviceAccountResourceType,
-		member,
-		serviceAccountTraits,
 		rs.WithParentResourceID(parentResourceID),
 	)
 	if err != nil {
@@ -124,7 +107,7 @@ func removeRolesPrefix(role string) string {
 	return strings.TrimPrefix(role, "roles/")
 }
 
-func datasetResource(ctx context.Context, datasetName string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
+func datasetResource(_ context.Context, datasetName string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
 	profile := map[string]interface{}{
 		"name": datasetName,
 	}
@@ -144,19 +127,16 @@ func datasetResource(ctx context.Context, datasetName string, parentResourceID *
 	return resource, nil
 }
 
-func isUserOrServiceAccount(policy *iampb.Policy, memberGranted string) string {
+func isUserOrServiceAccount(policy *iampb.Policy, memberGranted string) bool {
 	for _, binding := range policy.Bindings {
 		for _, member := range binding.Members {
-			switch member {
-			case fmt.Sprintf("%s:%s", serviceAccount, memberGranted):
-				return serviceAccount
-			case fmt.Sprintf("%s:%s", user, memberGranted):
-				return user
+			if member == fmt.Sprintf("%s:%s", serviceAccount, memberGranted) ||
+				member == fmt.Sprintf("%s:%s", user, memberGranted) {
+				return true
 			}
 		}
 	}
-
-	return ""
+	return false
 }
 
 func projectResource(projects *resourcemanagerpb.Project) (*v2.Resource, error) {
@@ -198,5 +178,17 @@ func isServiceAccount(member string) (bool, string) {
 		return true, strings.TrimPrefix(member, "serviceAccount:")
 	}
 
+	return false, ""
+}
+
+func isUserOrServiceAccountMember(member string) (bool, string) {
+	if strings.HasPrefix(member, "deleted:") {
+		return false, ""
+	}
+
+	parts := strings.SplitN(member, ":", 2)
+	if len(parts) >= 2 && (parts[0] == user || parts[0] == serviceAccount) {
+		return true, parts[1] // The actual username
+	}
 	return false, ""
 }

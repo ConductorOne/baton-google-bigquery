@@ -14,6 +14,8 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
 )
 
@@ -24,12 +26,20 @@ type datasetBuilder struct {
 }
 
 const (
-	ownerEntitlement  = "owner"
-	writerEntitlement = "writer"
-	viewerEntitlement = "viewer"
-	accessEntitlement = "access"
-	serviceAccount    = "serviceAccount"
-	user              = "user"
+	adminEntitlement                = "roles/admin"
+	editorEntitlement               = "roles/editor"
+	readerEntitlement               = "reader"
+	ownerEntitlement                = "owner"
+	writerEntitlement               = "writer"
+	viewerEntitlement               = "roles/viewer"
+	bqAdminEntitlement              = "roles/bigquery.admin"
+	bqStudioAdminEntitlement        = "roles/bigquery.studioAdmin"
+	bqUserEntitlement               = "roles/bigquery.user"
+	bqResourceEditorEntitlement     = "roles/bigquery.resourceEditor"
+	bqMetadataViewerEntitlement     = "roles/bigquery.metadataViewer"
+	bqFilteredDataViewerEntitlement = "roles/bigquery.filteredDataViewer"
+	serviceAccount                  = "serviceAccount"
+	user                            = "user"
 )
 
 var (
@@ -44,20 +54,45 @@ var (
 		This field will accept any of the above formats, but will return only the legacy format. For example,
 		if you set this field to "roles/bigquery.dataOwner", it will be returned back as "OWNER".
 	*/
-	ownerRole      = string(bigquery.OwnerRole)
-	readerRole     = string(bigquery.ReaderRole)
-	writerRole     = string(bigquery.WriterRole)
-	legacyRolesMap = map[string]string{
-		ownerRole:  "roles/bigquery.dataOwner",
-		readerRole: "roles/bigquery.dataEditor",
-		writerRole: "roles/bigquery.dataViewer",
-	}
+	ownerRole  = string(bigquery.OwnerRole)
+	readerRole = string(bigquery.ReaderRole)
+	writerRole = string(bigquery.WriterRole)
+
 	legacyRolesToEntitlementsMap = map[string]string{
 		ownerRole:  ownerEntitlement,
-		readerRole: writerEntitlement,
-		writerRole: viewerEntitlement,
+		readerRole: viewerEntitlement,
+		writerRole: writerEntitlement,
 	}
-	datasetEntitlements = []string{ownerEntitlement, writerEntitlement, viewerEntitlement}
+
+	specialGroupNameToPolicyBindingRoleMap = map[string]string{
+		"projectOwners":  "roles/owner",
+		"projectReaders": "roles/viewer",
+		"projectWriters": "roles/editor",
+	}
+
+	iamRoleToEntitlementMap = map[string]string{
+		"roles/bigquery.admin":              bqAdminEntitlement,
+		"roles/bigquery.studioAdmin":        bqStudioAdminEntitlement,
+		"roles/bigquery.user":               bqUserEntitlement,
+		"roles/bigquery.resourceEditor":     bqResourceEditorEntitlement, // Can read and modify dataset metadata but not the dataset content it self.
+		"roles/bigquery.metadataViewer":     bqMetadataViewerEntitlement,
+		"roles/bigquery.filteredDataViewer": bqFilteredDataViewerEntitlement, // Restricted Read Access. Can only access table rows which match their policy.
+		"roles/admin":                       adminEntitlement,
+		"roles/editor":                      editorEntitlement,
+		"roles/reader":                      readerEntitlement,
+	}
+	datasetEntitlements        = []string{ownerEntitlement, writerEntitlement, viewerEntitlement}
+	datasetIamRoleEntitlements = []string{
+		bqAdminEntitlement,
+		bqStudioAdminEntitlement,
+		bqUserEntitlement,
+		bqResourceEditorEntitlement,
+		bqMetadataViewerEntitlement,
+		bqFilteredDataViewerEntitlement,
+		adminEntitlement,
+		editorEntitlement,
+		readerEntitlement,
+	}
 )
 
 func (o *datasetBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
@@ -146,6 +181,9 @@ func (o *datasetBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 		writerEntitlement: "Can write to",
 		viewerEntitlement: "Can view",
 	}
+
+	var iamRoleEntitlementVerb = "Has role"
+
 	for _, datasetEntitlement := range datasetEntitlements {
 		assigmentOptions := []ent.EntitlementOption{
 			ent.WithGrantableTo(userResourceType),
@@ -153,27 +191,22 @@ func (o *datasetBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 			ent.WithDisplayName(fmt.Sprintf("%s dataset %s", resource.DisplayName, datasetEntitlement)),
 		}
 		rv = append(rv, ent.NewPermissionEntitlement(resource, datasetEntitlement, assigmentOptions...))
+	}
 
-		assigmentOptions = []ent.EntitlementOption{
-			ent.WithGrantableTo(serviceAccountResourceType),
-			ent.WithDescription(fmt.Sprintf("%s %s dataset", entitlementToVerbMap[datasetEntitlement], resource.DisplayName)),
-			ent.WithDisplayName(fmt.Sprintf("%s dataset %s", resource.DisplayName, datasetEntitlement)),
+	for _, iamRoleEntitlement := range datasetIamRoleEntitlements {
+		assigmentOptions := []ent.EntitlementOption{
+			ent.WithGrantableTo(userResourceType),
+			ent.WithDescription(fmt.Sprintf("%s %s in %s dataset", iamRoleEntitlementVerb, iamRoleEntitlement, resource.DisplayName)),
+			ent.WithDisplayName(fmt.Sprintf("%s dataset %s", resource.DisplayName, iamRoleEntitlement)),
 		}
-		rv = append(rv, ent.NewPermissionEntitlement(resource, datasetEntitlement, assigmentOptions...))
+		rv = append(rv, ent.NewPermissionEntitlement(resource, iamRoleEntitlement, assigmentOptions...))
 	}
-
-	assigmentOptions := []ent.EntitlementOption{
-		ent.WithGrantableTo(roleResourceType),
-		ent.WithDescription(fmt.Sprintf("has access to %s dataset", resource.DisplayName)),
-		ent.WithDisplayName(fmt.Sprintf("%s dataset %s", resource.DisplayName, accessEntitlement)),
-	}
-	rv = append(rv, ent.NewAssignmentEntitlement(resource, accessEntitlement, assigmentOptions...))
-
 	return rv, "", nil, nil
 }
 
 func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
 	var grants []*v2.Grant
+	l := ctxzap.Extract(ctx)
 	datasetID := resource.Id.Resource
 	projectId := resource.ParentResourceId.Resource
 	ds := o.bigQueryClient.DatasetInProject(projectId, datasetID)
@@ -198,90 +231,117 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	}
 
 	for _, access := range dataset.Access {
-		if (access.Role == bigquery.OwnerRole || access.EntityType == bigquery.UserEmailEntity) && access.EntityType != bigquery.SpecialGroupEntity {
-			g, err := o.GetUserOwnerGrants(policy, resource, access)
-			if err != nil {
-				return nil, "", nil, err
-			}
-			grants = append(grants, g...)
-		}
-
 		stringLegacyRoleValue := string(access.Role)
-		role, exists := legacyRolesMap[stringLegacyRoleValue]
-		if !exists {
-			return nil, "", nil, wrapError(fmt.Errorf("role for legacy role %s not found", stringLegacyRoleValue), "")
-		}
 
-		e, exists := legacyRolesToEntitlementsMap[stringLegacyRoleValue]
-		if !exists {
-			return nil, "", nil, wrapError(fmt.Errorf("entitlement for legacy role %s not found", stringLegacyRoleValue), "")
-		}
+		switch access.EntityType {
+		case bigquery.UserEmailEntity:
+			// An email address of a user to grant access to. For example: fred@example.com. Maps to IAM policy member "user:EMAIL" or "serviceAccount:EMAIL".
+			if access.Role == bigquery.OwnerRole {
+				// Generate Owners grants.
+				g, err := o.GetUserOwnerGrants(policy, resource, access)
+				if err != nil {
+					l.Warn("error while creating user owner grant",
+						zap.String("error", err.Error()))
+					continue
+				}
+				grants = append(grants, g...)
+			} else {
+				roleEntitlement, exists := legacyRolesToEntitlementsMap[stringLegacyRoleValue]
+				if !exists {
+					roleEntitlement, exists = iamRoleToEntitlementMap[stringLegacyRoleValue]
+					if !exists {
+						l.Warn("Role is not a legacy nor a predifined IAM role with permissions to read or write datasets",
+							zap.String("role", stringLegacyRoleValue))
+						continue
+					}
+				}
 
-		for _, binding := range policy.Bindings {
-			if binding.Role != role {
+				g, err := o.GetEntityGrant(policy, resource, access, roleEntitlement)
+				if err != nil {
+					l.Warn("error while creating user/acccount service grant",
+						zap.String("error", err.Error()))
+					continue
+				}
+				grants = append(grants, g...)
+			}
+		case bigquery.SpecialGroupEntity:
+			// A special group to grant access to. Possible values include:
+			//  - projectOwners: Owners of the enclosing project.
+			//  - projectReaders: Readers of the enclosing project.
+			//  - projectWriters: Writers of the enclosing project.
+			//  - allAuthenticatedUsers: All authenticated BigQuery users.
+			// Maps to similarly-named IAM members.
+			e, exists := legacyRolesToEntitlementsMap[stringLegacyRoleValue]
+			if !exists {
+				l.Warn("entitlement for legacy role not found",
+					zap.String("legacy role", stringLegacyRoleValue))
 				continue
 			}
+			for _, binding := range policy.Bindings {
+				specialGroupName := access.Entity
+				role, exists := specialGroupNameToPolicyBindingRoleMap[specialGroupName]
+				if !exists {
+					l.Warn("Special group not found",
+						zap.String("special group", specialGroupName))
+					continue
+				}
+				if binding.Role != role {
+					continue
+				}
+				for _, member := range binding.Members {
+					var usrR *v2.Resource
 
-			g, err := o.GetRoleGrants(resource, role)
-			if err != nil {
-				return nil, "", nil, err
-			}
-			grants = append(grants, g...)
-
-			for _, member := range binding.Members {
-				if isUser, user := isUser(member); isUser {
-					userResource, err := userResource(user, nil)
-					if err != nil {
-						return nil, "", nil, wrapError(err, "Unable to create user resource")
+					if isUser, user := isUser(member); isUser {
+						usrR, err = userResource(user, nil, nil)
+						if err != nil {
+							l.Warn("Unable to create user resource",
+								zap.String("error", err.Error()))
+							continue
+						}
+					} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
+						usrR, err = userResource(serviceAccount, nil, nil)
+						if err != nil {
+							l.Warn("Unable to create (service account) user resource",
+								zap.String("error", err.Error()))
+							continue
+						}
+					} else {
+						continue
 					}
-
-					grants = append(grants, grant.NewGrant(resource, e, userResource.Id))
-				} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
-					serviceAccountResource, err := serviceAccountResource(serviceAccount, nil)
-					if err != nil {
-						return nil, "", nil, wrapError(err, "Unable to create service account resource")
-					}
-
-					grants = append(grants, grant.NewGrant(resource, e, serviceAccountResource.Id))
+					grants = append(grants, grant.NewGrant(resource, e, usrR.Id))
 				}
 			}
+		default:
+			// It's either groupByEmail, domain, view, routine, other dataset or another type of iamMember (not user or special group).
+			l.Info("Skipping Access entry for unhandled entity type")
 		}
 	}
 
 	return grants, "", nil, nil
 }
 
-func (o *datasetBuilder) GetUserOwnerGrants(policy *iampb.Policy, resource *v2.Resource, access *bigquery.AccessEntry) ([]*v2.Grant, error) {
+func (o *datasetBuilder) GetEntityGrant(policy *iampb.Policy, resource *v2.Resource, access *bigquery.AccessEntry, entitlement string) ([]*v2.Grant, error) {
 	var (
 		res *v2.Resource
 		err error
 	)
-	switch isUserOrServiceAccount(policy, access.Entity) {
-	case serviceAccount:
-		res, err = serviceAccountResource(access.Entity, nil)
-	case user:
-		res, err = userResource(access.Entity, nil)
-	default:
+	if isUserOrServiceAccount(policy, access.Entity) {
+		res, err = userResource(access.Entity, nil, nil)
+	} else {
 		return nil, wrapError(fmt.Errorf("unknown entity type %s", access.Entity), "")
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	return []*v2.Grant{
-		grant.NewGrant(resource, ownerEntitlement, res.Id),
+		grant.NewGrant(resource, entitlement, res.Id),
 	}, nil
 }
 
-func (o *datasetBuilder) GetRoleGrants(resource *v2.Resource, role string) ([]*v2.Grant, error) {
-	roleResource, err := roleResource(role, nil)
-	if err != nil {
-		return nil, wrapError(err, "Unable to create role resource")
-	}
-
-	return []*v2.Grant{
-		grant.NewGrant(resource, accessEntitlement, roleResource.Id),
-	}, nil
+func (o *datasetBuilder) GetUserOwnerGrants(policy *iampb.Policy, resource *v2.Resource, access *bigquery.AccessEntry) ([]*v2.Grant, error) {
+	return o.GetEntityGrant(policy, resource, access, ownerEntitlement)
 }
 
 func newDatasetBuilder(bigQueryClient *bigquery.Client, projectsClient *resourcemanager.ProjectsClient) *datasetBuilder {

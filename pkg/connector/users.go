@@ -12,6 +12,7 @@ import (
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
+	sdkResource "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"google.golang.org/api/iterator"
 )
 
@@ -76,15 +77,22 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 
 		for _, binding := range policy.Bindings {
 			for _, member := range binding.Members {
-				isUser, member := isUser(member)
-				if !isUser {
+				var userString string
+				var accountTrait sdkResource.UserTraitOption = nil
+				if isUserBool, _ := isUser(member); isUserBool {
+					_, userString = isUser(member)
+				} else if isServiceAccountBool, _ := isServiceAccount(member); isServiceAccountBool {
+					_, userString = isServiceAccount(member)
+					accountTrait = sdkResource.WithAccountType(v2.UserTrait_ACCOUNT_TYPE_SERVICE)
+				} else {
 					continue
 				}
-
-				resource, err := userResource(member, &v2.ResourceId{
+				var resource *v2.Resource
+				var err error
+				resource, err = userResource(userString, &v2.ResourceId{
 					ResourceType: projectResourceType.Id,
 					Resource:     project.ProjectId,
-				})
+				}, accountTrait)
 				if err != nil {
 					return nil, "", nil, wrapError(err, "failed to create user resource")
 				}
