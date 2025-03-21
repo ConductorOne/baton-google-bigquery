@@ -112,13 +112,6 @@ func (o *roleBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *
 	}
 	rv = append(rv, ent.NewAssignmentEntitlement(resource, assignedEntitlement, assigmentOptions...))
 
-	assigmentOptions = []ent.EntitlementOption{
-		ent.WithGrantableTo(serviceAccountResourceType),
-		ent.WithDescription(fmt.Sprintf("Assigned to %s role", resource.DisplayName)),
-		ent.WithDisplayName(fmt.Sprintf("%s role %s", resource.DisplayName, assignedEntitlement)),
-	}
-	rv = append(rv, ent.NewAssignmentEntitlement(resource, assignedEntitlement, assigmentOptions...))
-
 	return rv, "", nil, nil
 }
 
@@ -144,21 +137,13 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 		}
 
 		for _, member := range binding.Members {
-			// TODO: handle group bindings
-			if isUser, user := isUser(member); isUser {
-				userResource, err := userResource(user, nil)
+			if isUser, user := isUserOrServiceAccountMember(member); isUser {
+				userResource, err := userResource(user, nil, nil)
 				if err != nil {
 					return nil, "", nil, wrapError(err, "failed to create user resource")
 				}
 
 				grants = append(grants, grant.NewGrant(resource, assignedEntitlement, userResource.Id))
-			} else if isServiceAccount, serviceAccount := isServiceAccount(member); isServiceAccount {
-				serviceAccountResource, err := serviceAccountResource(serviceAccount, nil)
-				if err != nil {
-					return nil, "", nil, wrapError(err, "failed to create service account resource")
-				}
-
-				grants = append(grants, grant.NewGrant(resource, assignedEntitlement, serviceAccountResource.Id))
 			}
 		}
 	}

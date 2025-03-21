@@ -93,13 +93,6 @@ func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 	}
 	rv = append(rv, ent.NewAssignmentEntitlement(resource, memberEntitlement, assigmentOptions...))
 
-	assigmentOptions = []ent.EntitlementOption{
-		ent.WithGrantableTo(serviceAccountResourceType),
-		ent.WithDescription(fmt.Sprintf("Assigned of %s project", resource.DisplayName)),
-		ent.WithDisplayName(fmt.Sprintf("%s project %s", resource.DisplayName, memberEntitlement)),
-	}
-	rv = append(rv, ent.NewAssignmentEntitlement(resource, memberEntitlement, assigmentOptions...))
-
 	return rv, "", nil, nil
 }
 

@@ -38,24 +38,6 @@ func TestUserBuilderList(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func TestServiceAccountBuilderList(t *testing.T) {
-	if jsonFilePath == "" {
-		t.Skip()
-	}
-
-	cliTest, err := getClientForTesting(ctxTest)
-	require.Nil(t, err)
-
-	u := &serviceAccountBuilder{
-		resourceType:   serviceAccountResourceType,
-		BigQueryClient: cliTest.BigQueryClient,
-		ProjectsClient: cliTest.ProjectsClient,
-	}
-
-	_, _, _, err = u.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})
-	require.Nil(t, err)
-}
-
 func TestProjectBuilderList(t *testing.T) {
 	if jsonFilePath == "" {
 		t.Skip()
