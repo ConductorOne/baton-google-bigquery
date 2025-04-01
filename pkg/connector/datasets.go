@@ -213,7 +213,9 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	dataset, err := ds.Metadata(ctx)
 	if err != nil {
 		if !isPermissionDenied(ctx, err) {
-			return nil, "", nil, wrapError(err, "Unable to fetch dataset metadata (projectId:"+projectId+" datasetID:"+datasetID+")")
+			// Error fetching dataset metadata, omit present resource and continue.
+			l.Debug("Unable to fetch dataset metadata (projectId:" + projectId + " datasetID:" + datasetID + ") error: " + err.Error())
+			return nil, "", nil, nil
 		}
 	}
 
