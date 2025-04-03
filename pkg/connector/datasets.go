@@ -16,6 +16,7 @@ import (
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 )
 
@@ -213,9 +214,15 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 	dataset, err := ds.Metadata(ctx)
 	if err != nil {
 		if !isPermissionDenied(ctx, err) {
-			// Error fetching dataset metadata, omit present resource and continue.
-			l.Debug("Unable to fetch dataset metadata (projectId:" + projectId + " datasetID:" + datasetID + ") error: " + err.Error())
-			return nil, "", nil, nil
+			// Check if it's a 404 error from the Google API, based on DatasetsGetCall's Do we can check if the error is a 404 error
+			// https://github.com/googleapis/google-api-go-client/blob/ca845161fd6688acdf5818fcb06f91d314866e4c/bigquery/v2/bigquery-gen.go#L10848-L10851
+			var apiErr *googleapi.Error
+			if errors.As(err, &apiErr) && apiErr.Code == 404 {
+				// For 404 errors, just return nil without error
+				l.Debug("Dataset not found (projectId:" + projectId + " datasetID:" + datasetID + ")")
+				return nil, "", nil, nil
+			}
+			return nil, "", nil, wrapError(err, "Unable to fetch dataset metadata (projectId:"+projectId+" datasetID:"+datasetID+")")
 		}
 	}
 
