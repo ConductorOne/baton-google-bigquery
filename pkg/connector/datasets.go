@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/iam/apiv1/iampb"
@@ -217,7 +218,7 @@ func (o *datasetBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 			// Check if it's a 404 error from the Google API, based on DatasetsGetCall's Do we can check if the error is a 404 error
 			// https://github.com/googleapis/google-api-go-client/blob/ca845161fd6688acdf5818fcb06f91d314866e4c/bigquery/v2/bigquery-gen.go#L10848-L10851
 			var apiErr *googleapi.Error
-			if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			if errors.As(err, &apiErr) && apiErr.Code == http.StatusNotFound {
 				// For 404 errors, just return nil without error
 				l.Debug("Dataset not found (projectId:" + projectId + " datasetID:" + datasetID + ")")
 				return nil, "", nil, nil
