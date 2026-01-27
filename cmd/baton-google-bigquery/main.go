@@ -8,6 +8,7 @@ import (
 	"github.com/conductorone/baton-google-bigquery/pkg/connector"
 	configSchema "github.com/conductorone/baton-sdk/pkg/config"
 	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
+	"github.com/conductorone/baton-sdk/pkg/connectorrunner"
 	"github.com/conductorone/baton-sdk/pkg/field"
 	"github.com/conductorone/baton-sdk/pkg/types"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
@@ -32,6 +33,7 @@ func main() {
 		connectorName,
 		getConnector,
 		field.NewConfiguration(configurationFields),
+		connectorrunner.WithDefaultCapabilitiesConnectorBuilder(&connector.GoogleBigQuery{}),
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
