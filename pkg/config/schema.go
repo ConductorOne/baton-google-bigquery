@@ -9,11 +9,19 @@ const (
 )
 
 var (
-	credentialsJSONFilePathField = field.StringField(CredentialsJSONFilePath, field.WithRequired(true), field.WithDescription("JSON credentials file name for the Google identity platform account."))
+	credentialsJSONFilePathField = field.StringField(
+		CredentialsJSONFilePath,
+		field.WithDisplayName("Credentials JSON File Path"),
+		field.WithRequired(true),
+		field.WithDescription("JSON credentials file name for the Google identity platform account."),
+	)
 
-	Config = field.Configuration{
-		Fields: []field.SchemaField{
+	Config = field.NewConfiguration(
+		[]field.SchemaField{
 			credentialsJSONFilePathField,
 		},
-	}
+		field.WithConnectorDisplayName("Google BigQuery"),
+		field.WithHelpUrl("/docs/baton/google-bigquery"),
+		field.WithIconUrl("/static/app-icons/google-bigquery.svg"),
+	)
 )
