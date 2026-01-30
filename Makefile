@@ -1,6 +1,7 @@
 GOOS = $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
 BUILD_DIR = dist/${GOOS}_${GOARCH}
+GENERATED_CONF := pkg/config/conf.gen.go
 
 ifeq ($(GOOS),windows)
 OUTPUT_PATH = ${BUILD_DIR}/baton-google-bigquery.exe
@@ -9,8 +10,14 @@ OUTPUT_PATH = ${BUILD_DIR}/baton-google-bigquery
 endif
 
 .PHONY: build
-build:
+build: $(GENERATED_CONF)
 	go build -o ${OUTPUT_PATH} ./cmd/baton-google-bigquery
+
+$(GENERATED_CONF): pkg/config/schema.go go.mod
+	@echo "Generating $(GENERATED_CONF)..."
+	go run pkg/config/gen/gen.go > $(GENERATED_CONF)
+
+generate: $(GENERATED_CONF)
 
 .PHONY: update-deps
 update-deps:
@@ -26,3 +33,6 @@ add-dep:
 .PHONY: lint
 lint:
 	golangci-lint run
+
+.PHONY: gen
+gen: $(GENERATED_CONF)
