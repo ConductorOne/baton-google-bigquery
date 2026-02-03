@@ -10,9 +10,8 @@ import (
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
-	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
-	sdkResource "github.com/conductorone/baton-sdk/pkg/types/resource"
+	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"google.golang.org/api/iterator"
 )
 
@@ -28,14 +27,14 @@ func (o *userBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 
 // List returns all the users from the database as resource objects.
 // Users include a UserTrait because they are the 'shape' of a standard user.
-func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
+func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, opts rs.SyncOpAttrs) ([]*v2.Resource, *rs.SyncOpResults, error) {
 	var (
 		resources []*v2.Resource
 		bag       = &pagination.Bag{}
 	)
-	err := bag.Unmarshal(pToken.Token)
+	err := bag.Unmarshal(opts.PageToken.Token)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, nil, err
 	}
 
 	if bag.Current() == nil {
@@ -58,7 +57,7 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 
 		if err != nil {
 			if !isPermissionDenied(ctx, err) {
-				return nil, "", nil, wrapError(err, "Unable to fetch project")
+				return nil, nil, wrapError(err, "Unable to fetch project")
 			}
 		}
 
@@ -67,23 +66,23 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		})
 		if err != nil {
 			if !isPermissionDenied(ctx, err) {
-				return nil, "", nil, wrapError(err, "listing users failed")
+				return nil, nil, wrapError(err, "listing users failed")
 			}
 		}
 
 		if policy == nil {
-			return resources, "", nil, nil
+			return resources, &rs.SyncOpResults{}, nil
 		}
 
 		for _, binding := range policy.Bindings {
 			for _, member := range binding.Members {
 				var userString string
-				var accountTrait sdkResource.UserTraitOption = nil
+				var accountTrait rs.UserTraitOption = nil
 				if isUserBool, _ := isUser(member); isUserBool {
 					_, userString = isUser(member)
 				} else if isServiceAccountBool, _ := isServiceAccount(member); isServiceAccountBool {
 					_, userString = isServiceAccount(member)
-					accountTrait = sdkResource.WithAccountType(v2.UserTrait_ACCOUNT_TYPE_SERVICE)
+					accountTrait = rs.WithAccountType(v2.UserTrait_ACCOUNT_TYPE_SERVICE)
 				} else {
 					continue
 				}
@@ -94,7 +93,7 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 					Resource:     project.ProjectId,
 				}, accountTrait)
 				if err != nil {
-					return nil, "", nil, wrapError(err, "failed to create user resource")
+					return nil, nil, wrapError(err, "failed to create user resource")
 				}
 
 				resources = append(resources, resource)
@@ -104,25 +103,25 @@ func (o *userBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 
 	err = bag.Next(it.PageInfo().Token)
 	if err != nil {
-		return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
+		return nil, nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
 	}
 
 	pageToken, err := bag.Marshal()
 	if err != nil {
-		return nil, "", nil, err
+		return nil, nil, err
 	}
 
-	return resources, pageToken, nil, nil
+	return resources, &rs.SyncOpResults{NextPageToken: pageToken}, nil
 }
 
 // Entitlements always returns an empty slice for users.
-func (o *userBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
-	return nil, "", nil, nil
+func (o *userBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ rs.SyncOpAttrs) ([]*v2.Entitlement, *rs.SyncOpResults, error) {
+	return nil, &rs.SyncOpResults{}, nil
 }
 
 // Grants always returns an empty slice for users since they don't have any entitlements.
-func (o *userBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
-	return nil, "", nil, nil
+func (o *userBuilder) Grants(ctx context.Context, resource *v2.Resource, opts rs.SyncOpAttrs) ([]*v2.Grant, *rs.SyncOpResults, error) {
+	return nil, &rs.SyncOpResults{}, nil
 }
 
 func newUserBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *userBuilder {
