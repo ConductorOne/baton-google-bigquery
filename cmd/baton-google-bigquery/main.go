@@ -6,11 +6,12 @@ import (
 	cfg "github.com/conductorone/baton-google-bigquery/pkg/config"
 	"github.com/conductorone/baton-google-bigquery/pkg/connector"
 	"github.com/conductorone/baton-sdk/pkg/config"
+	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
 )
 
 var version = "dev"
 
 func main() {
 	ctx := context.Background()
-	config.RunConnector(ctx, "baton-google-bigquery", version, cfg.Config, connector.NewConnector)
+	config.RunConnector(ctx, "baton-google-bigquery", version, cfg.Config, connector.NewConnector, connectorbuilder.WithDefaultCapabilitiesConnectorBuilder())
 }

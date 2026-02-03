@@ -10,7 +10,6 @@ import (
 	"github.com/conductorone/baton-google-bigquery/pkg/config"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
-	"github.com/conductorone/baton-sdk/pkg/cli"
 	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
@@ -23,8 +22,8 @@ type GoogleBigQuery struct {
 }
 
 // ResourceSyncers returns a ResourceSyncer for each resource type that should be synced from the upstream service.
-func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
-	return []connectorbuilder.ResourceSyncer{
+func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncerV2 {
+	return []connectorbuilder.ResourceSyncerV2{
 		newUserBuilder(d.ProjectsClient, d.BigQueryClient),
 		newRoleBuilder(d.ProjectsClient, d.BigQueryClient),
 		newDatasetBuilder(d.BigQueryClient, d.ProjectsClient),
@@ -87,14 +86,14 @@ func createClient(ctx context.Context, opts ...option.ClientOption) (*GoogleBigQ
 }
 
 // NewConnector returns a new connector builder from a configuration struct.
-func NewConnector(ctx context.Context, cfg *config.GoogleBigQuery, opts *cli.ConnectorOpts) (connectorbuilder.ConnectorBuilderV2, []connectorbuilder.Opt, error) {
+func NewConnector(ctx context.Context, cfg *config.GoogleBigQuery) (connectorbuilder.ConnectorBuilderV2, error) {
 	l := ctxzap.Extract(ctx)
 
 	cb, err := New(ctx, cfg.CredentialsJSONFilePath)
 	if err != nil {
 		l.Error("error creating connector", zap.Error(err))
-		return nil, nil, err
+		return nil, err
 	}
 
-	return cb, nil, nil
+	return cb, nil
 }
