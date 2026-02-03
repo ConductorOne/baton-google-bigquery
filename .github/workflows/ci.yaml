@@ -10,12 +10,12 @@ jobs:
   go-lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Install Go
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Generate config
         run: make gen
       - name: Run linters
@@ -29,13 +29,13 @@ jobs:
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Install Go
         if: success()
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Generate config
         run: make gen
       - name: go tests
@@ -54,12 +54,12 @@ jobs:
       BATON: baton
       BATON_GOOGLE_BIGQUERY: ./baton-google-bigquery
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Install Go
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Generate config
         run: make gen
       - name: Build baton-google-bigquery

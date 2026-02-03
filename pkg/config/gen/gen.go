@@ -10,5 +10,5 @@ type GoogleBigQueryConfig struct {
 }
 
 func main() {
-	sdkConfig.Generate("google-bigquery", GoogleBigQueryConfig{})
+	sdkConfig.Generate("google-bigquery", config.Config)
 }

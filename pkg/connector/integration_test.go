@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/bigquery"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
+	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +18,7 @@ var (
 )
 
 func getClientForTesting(ctx context.Context) (*GoogleBigQuery, error) {
-	return New(ctx, jsonFilePath)
+	return newClient(ctx, jsonFilePath)
 }
 
 func TestUserBuilderList(t *testing.T) {
@@ -34,7 +35,7 @@ func TestUserBuilderList(t *testing.T) {
 		ProjectsClient: cliTest.ProjectsClient,
 	}
 
-	_, _, _, err = u.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})
+	_, _, err = u.List(ctxTest, &v2.ResourceId{}, rs.SyncOpAttrs{PageToken: pagination.Token{}})
 	require.Nil(t, err)
 }
 
@@ -54,11 +55,11 @@ func TestProjectBuilderList(t *testing.T) {
 
 	var token = "{}"
 	for token != "" {
-		_, pageToken, _, err := p.List(ctxTest, &v2.ResourceId{}, &pagination.Token{
-			Token: token,
+		_, results, err := p.List(ctxTest, &v2.ResourceId{}, rs.SyncOpAttrs{
+			PageToken: pagination.Token{Token: token},
 		})
 		require.Nil(t, err)
-		token = pageToken
+		token = results.NextPageToken
 	}
 }
 
@@ -106,7 +107,7 @@ func TestRoleBuilderList(t *testing.T) {
 		projectsClient: cliTest.ProjectsClient,
 	}
 
-	_, _, _, err = u.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})
+	_, _, err = u.List(ctxTest, &v2.ResourceId{}, rs.SyncOpAttrs{PageToken: pagination.Token{}})
 	require.Nil(t, err)
 }
 
@@ -127,7 +128,7 @@ func TestDatasetBuilderList(t *testing.T) {
 		projectsClient: cliTest.ProjectsClient,
 	}
 
-	_, _, _, err = o.List(ctxTest, &v2.ResourceId{}, &pagination.Token{})
+	_, _, err = o.List(ctxTest, &v2.ResourceId{}, rs.SyncOpAttrs{PageToken: pagination.Token{}})
 	require.Nil(t, err)
 }
 
@@ -149,9 +150,9 @@ func TestDatasetGrants(t *testing.T) {
 		projectsClient: cliTest.ProjectsClient,
 	}
 
-	_, _, _, err = d.Grants(ctxTest, &v2.Resource{
+	_, _, err = d.Grants(ctxTest, &v2.Resource{
 		Id:               &v2.ResourceId{ResourceType: datasetResourceType.Id, Resource: datasetID},
 		ParentResourceId: &v2.ResourceId{ResourceType: projectResourceType.Id, Resource: projectId},
-	}, &pagination.Token{})
+	}, rs.SyncOpAttrs{PageToken: pagination.Token{}})
 	require.Nil(t, err)
 }
