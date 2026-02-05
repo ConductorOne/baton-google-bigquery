@@ -7,9 +7,13 @@ import (
 
 	"cloud.google.com/go/bigquery"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	"github.com/conductorone/baton-google-bigquery/pkg/config"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
+	"github.com/conductorone/baton-sdk/pkg/cli"
 	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"go.uber.org/zap"
 	"google.golang.org/api/option"
 )
 
@@ -19,8 +23,8 @@ type GoogleBigQuery struct {
 }
 
 // ResourceSyncers returns a ResourceSyncer for each resource type that should be synced from the upstream service.
-func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
-	return []connectorbuilder.ResourceSyncer{
+func (d *GoogleBigQuery) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncerV2 {
+	return []connectorbuilder.ResourceSyncerV2{
 		newUserBuilder(d.ProjectsClient, d.BigQueryClient),
 		newRoleBuilder(d.ProjectsClient, d.BigQueryClient),
 		newDatasetBuilder(d.BigQueryClient, d.ProjectsClient),
@@ -52,8 +56,8 @@ func (d *GoogleBigQuery) Validate(ctx context.Context) (annotations.Annotations,
 	return nil, nil
 }
 
-// New returns a new instance of the connector.
-func New(ctx context.Context, credentialsJSONFilePath string) (*GoogleBigQuery, error) {
+// newClient returns a new instance of the connector.
+func newClient(ctx context.Context, credentialsJSONFilePath string) (*GoogleBigQuery, error) {
 	opt := option.WithCredentialsFile(credentialsJSONFilePath)
 
 	return createClient(ctx, opt)
@@ -80,4 +84,17 @@ func createClient(ctx context.Context, opts ...option.ClientOption) (*GoogleBigQ
 		ProjectsClient: projectsClient,
 		BigQueryClient: bigQueryClient,
 	}, nil
+}
+
+// New returns a new connector builder from a configuration struct.
+func New(ctx context.Context, cfg *config.GoogleBigQuery, opts *cli.ConnectorOpts) (connectorbuilder.ConnectorBuilderV2, []connectorbuilder.Opt, error) {
+	l := ctxzap.Extract(ctx)
+
+	cb, err := newClient(ctx, cfg.CredentialsJSONFilePath)
+	if err != nil {
+		l.Error("error creating connector", zap.Error(err))
+		return nil, nil, err
+	}
+
+	return cb, nil, nil
 }

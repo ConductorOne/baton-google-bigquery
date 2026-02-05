@@ -10,10 +10,10 @@ import (
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
-	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
+	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"google.golang.org/api/iterator"
 )
 
@@ -29,14 +29,14 @@ func (r *roleBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return roleResourceType
 }
 
-func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
+func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, opts rs.SyncOpAttrs) ([]*v2.Resource, *rs.SyncOpResults, error) {
 	var (
 		resources []*v2.Resource
 		bag       = &pagination.Bag{}
 	)
-	err := bag.Unmarshal(pToken.Token)
+	err := bag.Unmarshal(opts.PageToken.Token)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, nil, err
 	}
 
 	if bag.Current() == nil {
@@ -59,7 +59,7 @@ func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 
 		if err != nil {
 			if !isPermissionDenied(ctx, err) {
-				return nil, "", nil, wrapError(err, "Unable to fetch project")
+				return nil, nil, wrapError(err, "Unable to fetch project")
 			}
 		}
 
@@ -68,12 +68,12 @@ func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 		})
 		if err != nil {
 			if !isPermissionDenied(ctx, err) {
-				return nil, "", nil, wrapError(err, "failed to get IAM policy")
+				return nil, nil, wrapError(err, "failed to get IAM policy")
 			}
 		}
 
 		if policy == nil {
-			return resources, "", nil, nil
+			return resources, &rs.SyncOpResults{}, nil
 		}
 
 		for _, binding := range policy.Bindings {
@@ -82,7 +82,7 @@ func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 				Resource:     project.ProjectId,
 			})
 			if err != nil {
-				return nil, "", nil, wrapError(err, "failed to create role resource")
+				return nil, nil, wrapError(err, "failed to create role resource")
 			}
 
 			resources = append(resources, resource)
@@ -91,18 +91,18 @@ func (r *roleBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId,
 
 	err = bag.Next(it.PageInfo().Token)
 	if err != nil {
-		return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
+		return nil, nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
 	}
 
 	pageToken, err := bag.Marshal()
 	if err != nil {
-		return nil, "", nil, err
+		return nil, nil, err
 	}
 
-	return resources, pageToken, nil, nil
+	return resources, &rs.SyncOpResults{NextPageToken: pageToken}, nil
 }
 
-func (o *roleBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
+func (o *roleBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ rs.SyncOpAttrs) ([]*v2.Entitlement, *rs.SyncOpResults, error) {
 	var rv []*v2.Entitlement
 
 	assigmentOptions := []ent.EntitlementOption{
@@ -112,10 +112,10 @@ func (o *roleBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *
 	}
 	rv = append(rv, ent.NewAssignmentEntitlement(resource, assignedEntitlement, assigmentOptions...))
 
-	return rv, "", nil, nil
+	return rv, &rs.SyncOpResults{}, nil
 }
 
-func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
+func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, opts rs.SyncOpAttrs) ([]*v2.Grant, *rs.SyncOpResults, error) {
 	var grants []*v2.Grant
 	projectId := resource.ParentResourceId.Resource
 	policy, err := o.projectsClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
@@ -123,12 +123,12 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 	})
 	if err != nil {
 		if !isPermissionDenied(ctx, err) {
-			return nil, "", nil, wrapError(err, "listing grants for roles failed")
+			return nil, nil, wrapError(err, "listing grants for roles failed")
 		}
 	}
 
 	if policy == nil {
-		return grants, "", nil, nil
+		return grants, &rs.SyncOpResults{}, nil
 	}
 
 	for _, binding := range policy.Bindings {
@@ -140,7 +140,7 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 			if isUser, user := isUserOrServiceAccountMember(member); isUser {
 				userResource, err := userResource(user, nil, nil)
 				if err != nil {
-					return nil, "", nil, wrapError(err, "failed to create user resource")
+					return nil, nil, wrapError(err, "failed to create user resource")
 				}
 
 				grants = append(grants, grant.NewGrant(resource, assignedEntitlement, userResource.Id))
@@ -148,7 +148,7 @@ func (o *roleBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken 
 		}
 	}
 
-	return grants, "", nil, nil
+	return grants, &rs.SyncOpResults{}, nil
 }
 
 func newRoleBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *roleBuilder {

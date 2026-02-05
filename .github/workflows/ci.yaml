@@ -1,34 +1,43 @@
 name: ci
-on: pull_request
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  push:
+    branches:
+      - main
 jobs:
   go-lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22.x
-      - name: Checkout code
-        uses: actions/checkout@v4
+          go-version-file: go.mod
+      - name: Generate config
+        run: make gen
       - name: Run linters
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v8
         with:
           version: latest
           args: --timeout=3m
   go-test:
     strategy:
       matrix:
-        go-version: [1.22.x]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Install Go
         if: success()
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v4
+          go-version-file: go.mod
+      - name: Generate config
+        run: make gen
       - name: go tests
         run: (set -o pipefail && go test -v -covermode=count -json ./... | tee test.json)
       - name: annotate go tests
@@ -45,12 +54,14 @@ jobs:
       BATON: baton
       BATON_GOOGLE_BIGQUERY: ./baton-google-bigquery
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22.x
-      - name: Checkout code
-        uses: actions/checkout@v4
+          go-version-file: go.mod
+      - name: Generate config
+        run: make gen
       - name: Build baton-google-bigquery
         run: go build ./cmd/baton-google-bigquery
       - name: Install baton

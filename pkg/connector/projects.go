@@ -9,10 +9,10 @@ import (
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
-	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/pagination"
 	ent "github.com/conductorone/baton-sdk/pkg/types/entitlement"
 	grant "github.com/conductorone/baton-sdk/pkg/types/grant"
+	rs "github.com/conductorone/baton-sdk/pkg/types/resource"
 	"google.golang.org/api/iterator"
 )
 
@@ -28,14 +28,14 @@ func (p *projectBuilder) ResourceType(ctx context.Context) *v2.ResourceType {
 	return projectResourceType
 }
 
-func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, pToken *pagination.Token) ([]*v2.Resource, string, annotations.Annotations, error) {
+func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.ResourceId, opts rs.SyncOpAttrs) ([]*v2.Resource, *rs.SyncOpResults, error) {
 	var (
 		resources []*v2.Resource
 		bag       = &pagination.Bag{}
 	)
-	err := bag.Unmarshal(pToken.Token)
+	err := bag.Unmarshal(opts.PageToken.Token)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, nil, err
 	}
 
 	if bag.Current() == nil {
@@ -59,13 +59,13 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 
 		if err != nil {
 			if !isPermissionDenied(ctx, err) {
-				return nil, "", nil, wrapError(err, "Unable to fetch projects")
+				return nil, nil, wrapError(err, "Unable to fetch projects")
 			}
 		}
 
 		resource, err := projectResource(project)
 		if err != nil {
-			return nil, "", nil, wrapError(err, "Unable to create project resource")
+			return nil, nil, wrapError(err, "Unable to create project resource")
 		}
 
 		resources = append(resources, resource)
@@ -73,18 +73,18 @@ func (p *projectBuilder) List(ctx context.Context, parentResourceID *v2.Resource
 
 	err = bag.Next(it.PageInfo().Token)
 	if err != nil {
-		return nil, "", nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
+		return nil, nil, fmt.Errorf("failed to fetch bag.Next: %w", err)
 	}
 
 	pageToken, err := bag.Marshal()
 	if err != nil {
-		return nil, "", nil, err
+		return nil, nil, err
 	}
 
-	return resources, pageToken, nil, nil
+	return resources, &rs.SyncOpResults{NextPageToken: pageToken}, nil
 }
 
-func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ *pagination.Token) ([]*v2.Entitlement, string, annotations.Annotations, error) {
+func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, _ rs.SyncOpAttrs) ([]*v2.Entitlement, *rs.SyncOpResults, error) {
 	var rv []*v2.Entitlement
 	assigmentOptions := []ent.EntitlementOption{
 		ent.WithGrantableTo(userResourceType),
@@ -93,10 +93,10 @@ func (p *projectBuilder) Entitlements(_ context.Context, resource *v2.Resource, 
 	}
 	rv = append(rv, ent.NewAssignmentEntitlement(resource, memberEntitlement, assigmentOptions...))
 
-	return rv, "", nil, nil
+	return rv, &rs.SyncOpResults{}, nil
 }
 
-func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pToken *pagination.Token) ([]*v2.Grant, string, annotations.Annotations, error) {
+func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, opts rs.SyncOpAttrs) ([]*v2.Grant, *rs.SyncOpResults, error) {
 	var rv []*v2.Grant
 	iter := p.bigQueryClient.Datasets(ctx)
 	iter.ProjectID = resource.Id.Resource // Setting ProjectID
@@ -108,7 +108,7 @@ func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 
 		if err != nil {
 			if !isPermissionDenied(ctx, err) {
-				return nil, "", nil, wrapError(err, "Unable to fetch dataset")
+				return nil, nil, wrapError(err, "Unable to fetch dataset")
 			}
 		}
 
@@ -121,7 +121,7 @@ func (p *projectBuilder) Grants(ctx context.Context, resource *v2.Resource, pTok
 		rv = append(rv, membershipGrant)
 	}
 
-	return rv, "", nil, nil
+	return rv, &rs.SyncOpResults{}, nil
 }
 
 func newProjectBuilder(projectsClient *resourcemanager.ProjectsClient, bigQueryClient *bigquery.Client) *projectBuilder {
