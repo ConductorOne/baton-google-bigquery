@@ -19,7 +19,7 @@ jobs:
       - name: Generate config
         run: make gen
       - name: Run linters
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v8
         with:
           version: latest
           args: --timeout=3m

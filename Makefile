@@ -13,7 +13,7 @@ endif
 build: $(GENERATED_CONF)
 	go build -o ${OUTPUT_PATH} ./cmd/baton-google-bigquery
 
-$(GENERATED_CONF): pkg/config/schema.go go.mod
+$(GENERATED_CONF): pkg/config/config.go go.mod
 	@echo "Generating $(GENERATED_CONF)..."
 	go run pkg/config/gen/gen.go > $(GENERATED_CONF)
 
