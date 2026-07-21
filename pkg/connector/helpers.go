@@ -61,9 +61,7 @@ func userResource(member string, parentResourceID *v2.ResourceId, trait rs.UserT
 	}
 
 	userTrairs := []rs.UserTraitOption{
-		rs.WithUserProfile(profile),
 		rs.WithUserLogin(member),
-		rs.WithStatus(v2.UserTrait_Status_STATUS_ENABLED),
 	}
 	if trait != nil {
 		userTrairs = append(userTrairs, trait)
@@ -74,6 +72,8 @@ func userResource(member string, parentResourceID *v2.ResourceId, trait rs.UserT
 		member,
 		userTrairs,
 		rs.WithParentResourceID(parentResourceID),
+		rs.WithResourceProfile(profile),
+		rs.WithResourceStatus(v2.Status_RESOURCE_STATUS_ENABLED, ""),
 	)
 	if err != nil {
 		return nil, err
@@ -87,14 +87,12 @@ func roleResource(role string, parentResourceID *v2.ResourceId) (*v2.Resource, e
 	profile := map[string]interface{}{
 		"name": roleName,
 	}
-	roleTraitOptions := []rs.RoleTraitOption{
-		rs.WithRoleProfile(profile),
-	}
 	resource, err := rs.NewRoleResource(roleName,
 		roleResourceType,
 		role,
-		roleTraitOptions,
+		nil,
 		rs.WithParentResourceID(parentResourceID),
+		rs.WithResourceProfile(profile),
 	)
 	if err != nil {
 		return nil, err
@@ -112,13 +110,13 @@ func datasetResource(_ context.Context, datasetName string, parentResourceID *v2
 		"name": datasetName,
 	}
 
-	groupTraitOptions := []rs.GroupTraitOption{rs.WithGroupProfile(profile)}
 	resource, err := rs.NewGroupResource(
 		datasetName,
 		datasetResourceType,
 		datasetName,
-		groupTraitOptions,
+		nil,
 		rs.WithParentResourceID(parentResourceID),
+		rs.WithResourceProfile(profile),
 	)
 	if err != nil {
 		return nil, err
@@ -147,11 +145,7 @@ func projectResource(projects *resourcemanagerpb.Project) (*v2.Resource, error) 
 		"displayName": projects.DisplayName,
 	}
 
-	projectTraitOptions := []rs.AppTraitOption{
-		rs.WithAppProfile(profile),
-	}
-
-	opts = append(opts, rs.WithAppTrait(projectTraitOptions...))
+	opts = append(opts, rs.WithAppTrait(), rs.WithResourceProfile(profile))
 	resource, err := rs.NewResource(
 		projects.DisplayName,
 		projectResourceType,
