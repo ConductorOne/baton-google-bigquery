@@ -4,7 +4,7 @@ go 1.25.2
 
 require (
 	cloud.google.com/go/bigquery v1.60.0
-	github.com/conductorone/baton-sdk v0.19.1
+	github.com/conductorone/baton-sdk v0.20.1
 	github.com/ennyjfrick/ruleguard-logfatal v0.0.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/quasilyte/go-ruleguard/dsl v0.3.23
@@ -14,6 +14,7 @@ require (
 
 require (
 	cloud.google.com/go/longrunning v0.5.6 // indirect
+	filippo.io/hpke v0.4.0 // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/RaduBerinde/axisds v0.1.0 // indirect
@@ -83,7 +84,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/iam v1.1.7
 	cloud.google.com/go/resourcemanager v1.9.6
-	filippo.io/age v1.2.1 // indirect
+	filippo.io/age v1.3.1 // indirect
 	filippo.io/edwards25519 v1.1.1 // indirect
 	github.com/apache/arrow/go/v14 v14.0.2 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.41.7 // indirect
