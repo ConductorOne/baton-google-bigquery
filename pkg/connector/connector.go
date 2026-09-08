@@ -19,9 +19,9 @@ type GoogleBigQuery struct {
 	BigQueryClient *bigquery.Client
 }
 
-// Close releases the ProjectsClient's gRPC connection. Nothing in this module
-// calls it — connectorbuilder discovers Close through an unexported interface —
-// so it takes effect only for embedders whose baton-sdk carries that close hook.
+// Close releases the ProjectsClient's gRPC connection. connectorbuilder
+// discovers it through an unexported interface and wires it as the connector's
+// close hook, so no caller references it directly.
 func (d *GoogleBigQuery) Close() error {
 	var errs []error
 	if d.ProjectsClient != nil {
