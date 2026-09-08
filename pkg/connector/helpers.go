@@ -16,6 +16,9 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
+// profileNameKey is the resource-profile field name shared by every resource type here.
+const profileNameKey = "name"
+
 const (
 	iamPermissionDenied = "IAM_PERMISSION_DENIED"
 	NF                  = -1
@@ -85,7 +88,7 @@ func userResource(member string, parentResourceID *v2.ResourceId, trait rs.UserT
 func roleResource(role string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
 	roleName := removeRolesPrefix(role)
 	profile := map[string]interface{}{
-		"name": roleName,
+		profileNameKey: roleName,
 	}
 	roleTraitOptions := []rs.RoleTraitOption{
 		rs.WithRoleProfile(profile),
@@ -109,7 +112,7 @@ func removeRolesPrefix(role string) string {
 
 func datasetResource(_ context.Context, datasetName string, parentResourceID *v2.ResourceId) (*v2.Resource, error) {
 	profile := map[string]interface{}{
-		"name": datasetName,
+		profileNameKey: datasetName,
 	}
 
 	groupTraitOptions := []rs.GroupTraitOption{rs.WithGroupProfile(profile)}
@@ -142,9 +145,9 @@ func isUserOrServiceAccount(policy *iampb.Policy, memberGranted string) bool {
 func projectResource(projects *resourcemanagerpb.Project) (*v2.Resource, error) {
 	var opts []rs.ResourceOption
 	profile := map[string]interface{}{
-		"id":          projects.ProjectId,
-		"name":        projects.Name,
-		"displayName": projects.DisplayName,
+		"id":           projects.ProjectId,
+		profileNameKey: projects.Name,
+		"displayName":  projects.DisplayName,
 	}
 
 	projectTraitOptions := []rs.AppTraitOption{
