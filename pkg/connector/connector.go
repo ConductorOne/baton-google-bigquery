@@ -23,7 +23,14 @@ type GoogleBigQuery struct {
 // calls it — connectorbuilder discovers Close through an unexported interface —
 // so it takes effect only for embedders whose baton-sdk carries that close hook.
 func (d *GoogleBigQuery) Close() error {
-	return errors.Join(d.ProjectsClient.Close(), d.BigQueryClient.Close())
+	var errs []error
+	if d.ProjectsClient != nil {
+		errs = append(errs, d.ProjectsClient.Close())
+	}
+	if d.BigQueryClient != nil {
+		errs = append(errs, d.BigQueryClient.Close())
+	}
+	return errors.Join(errs...)
 }
 
 // ResourceSyncers returns a ResourceSyncer for each resource type that should be synced from the upstream service.
