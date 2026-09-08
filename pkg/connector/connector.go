@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -16,6 +17,13 @@ import (
 type GoogleBigQuery struct {
 	ProjectsClient *resourcemanager.ProjectsClient
 	BigQueryClient *bigquery.Client
+}
+
+// Close releases the ProjectsClient's gRPC connection. Nothing in this module
+// calls it — connectorbuilder discovers Close through an unexported interface —
+// so it takes effect only for embedders whose baton-sdk carries that close hook.
+func (d *GoogleBigQuery) Close() error {
+	return errors.Join(d.ProjectsClient.Close(), d.BigQueryClient.Close())
 }
 
 // ResourceSyncers returns a ResourceSyncer for each resource type that should be synced from the upstream service.
@@ -73,7 +81,7 @@ func createClient(ctx context.Context, opts ...option.ClientOption) (*GoogleBigQ
 
 	bigQueryClient, err := bigquery.NewClient(ctx, bigquery.DetectProjectID, opts...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, projectsClient.Close())
 	}
 
 	return &GoogleBigQuery{
