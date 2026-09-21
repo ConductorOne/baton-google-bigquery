@@ -21,7 +21,7 @@ baton resources
 ## docker
 
 ```
-docker run --rm -v $(pwd):/out -e BATON_CREDENTIALS_JSON_FILE_PATH=./pathOfServiceKey.json ghcr.io/conductorone/baton-google-bigquery:latest -f "/out/sync.c1z"
+docker run --rm -v $(pwd):/out -e BATON_CREDENTIALS_JSON_FILE_PATH=./pathOfServiceKey.json public.ecr.aws/conductorone/baton-google-bigquery:latest -f "/out/sync.c1z"
 docker run --rm -v $(pwd):/out ghcr.io/conductorone/baton:latest -f "/out/sync.c1z" resources
 ```
 
