@@ -54,13 +54,13 @@ func (d *GoogleBigQuery) Validate(ctx context.Context) (annotations.Annotations,
 
 // New returns a new instance of the connector.
 func New(ctx context.Context, credentialsJSONFilePath string) (*GoogleBigQuery, error) {
-	opt := option.WithCredentialsFile(credentialsJSONFilePath)
+	opt := option.WithAuthCredentialsFile(option.ServiceAccount, credentialsJSONFilePath)
 
 	return createClient(ctx, opt)
 }
 
 func NewFromJSONBytes(ctx context.Context, credentialsJSON []byte) (*GoogleBigQuery, error) {
-	opt := option.WithCredentialsJSON(credentialsJSON)
+	opt := option.WithAuthCredentialsJSON(option.ServiceAccount, credentialsJSON)
 
 	return createClient(ctx, opt)
 }
