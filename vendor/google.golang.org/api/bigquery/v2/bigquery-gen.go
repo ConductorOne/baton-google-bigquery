@@ -395,6 +395,9 @@ type Argument struct {
 	// can be a struct or an array, but not a table.
 	//   "ANY_TYPE" - The argument is any type, including struct or array, but not
 	// a table.
+	//   "FIXED_TABLE" - The argument is a table with fully specified column names
+	// and types.
+	//   "ANY_TABLE" - The argument is any table type.
 	ArgumentKind string `json:"argumentKind,omitempty"`
 	// DataType: Set if argument_kind == FIXED_TYPE.
 	DataType *StandardSqlDataType `json:"dataType,omitempty"`
@@ -416,6 +419,8 @@ type Argument struct {
 	// Name: Optional. The name of this argument. Can be absent for function return
 	// argument.
 	Name string `json:"name,omitempty"`
+	// TableType: Optional. Set if argument_kind == FIXED_TABLE.
+	TableType *StandardSqlTableType `json:"tableType,omitempty"`
 	// ForceSendFields is a list of field names (e.g. "ArgumentKind") to
 	// unconditionally include in API requests. By default, fields with empty or
 	// default values are omitted from API requests. See
@@ -763,6 +768,102 @@ func (s ArimaSingleModelForecastingMetrics) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
+// ArrowRecordBatch: Arrow RecordBatch. Preview
+// (https://cloud.google.com/products/#product-launch-stages)
+type ArrowRecordBatch struct {
+	// SerializedRecordBatch: IPC-serialized Arrow RecordBatch.
+	SerializedRecordBatch string `json:"serializedRecordBatch,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "SerializedRecordBatch") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "SerializedRecordBatch") to
+	// include in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s ArrowRecordBatch) MarshalJSON() ([]byte, error) {
+	type NoMethod ArrowRecordBatch
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// ArrowSchema: Arrow schema as specified in
+// https://arrow.apache.org/docs/python/api/datatypes.html and serialized to
+// bytes using IPC:
+// https://arrow.apache.org/docs/format/Columnar.html#serialization-and-interprocess-communication-ipc
+// See code samples on how this message can be deserialized. Preview
+// (https://cloud.google.com/products/#product-launch-stages)
+type ArrowSchema struct {
+	// SerializedSchema: IPC serialized Arrow schema.
+	SerializedSchema string `json:"serializedSchema,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "SerializedSchema") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "SerializedSchema") to include in
+	// API requests with the JSON null value. By default, fields with empty values
+	// are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s ArrowSchema) MarshalJSON() ([]byte, error) {
+	type NoMethod ArrowSchema
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// ArrowSerializationOptions: Contains options specific to Arrow Serialization.
+// Preview (https://cloud.google.com/products/#product-launch-stages)
+type ArrowSerializationOptions struct {
+	// BufferCompression: The compression codec to use for Arrow buffers in
+	// serialized record batches.
+	//
+	// Possible values:
+	//   "COMPRESSION_UNSPECIFIED" - If unspecified no compression will be used.
+	//   "LZ4_FRAME" - [LZ4
+	// Frame](https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md)
+	//   "ZSTD" - Zstandard compression.
+	BufferCompression string `json:"bufferCompression,omitempty"`
+	// PicosTimestampPrecision: Optional. Set timestamp precision option. If not
+	// set, the default precision is microseconds.
+	//
+	// Possible values:
+	//   "PICOS_TIMESTAMP_PRECISION_UNSPECIFIED" - Unspecified timestamp precision.
+	// The default precision is microseconds.
+	//   "TIMESTAMP_PRECISION_MICROS" - Timestamp values returned in the results
+	// will be truncated to microsecond level precision. The value will be encoded
+	// as Arrow TIMESTAMP type in a 64 bit integer.
+	//   "TIMESTAMP_PRECISION_NANOS" - Timestamp values returned in the results
+	// will be truncated to nanosecond level precision. The value will be encoded
+	// as Arrow TIMESTAMP type in a 64 bit integer.
+	//   "TIMESTAMP_PRECISION_PICOS" - Timestamp values returned in the results
+	// will contain full precision picosecond value. The value will be encoded as a
+	// string which conforms to ISO 8601 format.
+	PicosTimestampPrecision string `json:"picosTimestampPrecision,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "BufferCompression") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "BufferCompression") to include in
+	// API requests with the JSON null value. By default, fields with empty values
+	// are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s ArrowSerializationOptions) MarshalJSON() ([]byte, error) {
+	type NoMethod ArrowSerializationOptions
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
 // AuditConfig: Specifies the audit configuration for a service. The
 // configuration determines which permission types are logged, and what
 // identities, if any, are exempted from logging. An AuditConfig must have one
@@ -994,6 +1095,15 @@ type BigLakeConfiguration struct {
 	//   "FILE_FORMAT_UNSPECIFIED" - Default Value.
 	//   "PARQUET" - Apache Parquet format.
 	FileFormat string `json:"fileFormat,omitempty"`
+	// MetadataExportMode: Optional. The type of Metadata Export for BigLake
+	// Managed Tables.
+	//
+	// Possible values:
+	//   "METADATA_EXPORT_MODE_UNSPECIFIED" - No export type specified. This will
+	// default to ASYNC.
+	//   "ASYNC" - Async export mode.
+	//   "MANUAL" - Manual metadata export.
+	MetadataExportMode string `json:"metadataExportMode,omitempty"`
 	// StorageUri: Optional. The fully qualified location prefix of the external
 	// folder where table data is stored. The '*' wildcard character is not
 	// allowed. The URI should be in the format `gs://bucket/path_to_table/`
@@ -2001,9 +2111,34 @@ func (s DataMaskingStatistics) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
+// DataPolicyList: A list of data policy options. For more information, see
+// Mask data by applying data policies to a column
+// (https://docs.cloud.google.com/bigquery/docs/column-data-masking#data-policies-on-column).
+type DataPolicyList struct {
+	// DataPolicies: Contains a list of data policy options. At most 9 data
+	// policies are allowed per field.
+	DataPolicies []*DataPolicyOption `json:"dataPolicies,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "DataPolicies") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "DataPolicies") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s DataPolicyList) MarshalJSON() ([]byte, error) {
+	type NoMethod DataPolicyList
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
 // DataPolicyOption: Data policy option. For more information, see Mask data by
 // applying data policies to a column
-// (https://cloud.google.com/bigquery/docs/column-data-masking#data-policies-on-column/).
+// (https://docs.cloud.google.com/bigquery/docs/column-data-masking#data-policies-on-column).
 type DataPolicyOption struct {
 	// Name: Data policy resource name in the form of
 	// projects/project_id/locations/location_id/dataPolicies/data_policy_id.
@@ -2067,6 +2202,10 @@ type Dataset struct {
 	// access field. To add entities, you must supply the entire existing access
 	// array in addition to any new entities that you want to add.
 	Access []*DatasetAccess `json:"access,omitempty"`
+	// CatalogSource: Output only. The origin of the dataset, one of: * (Unset) -
+	// Native BigQuery Dataset * BIGLAKE - Dataset is backed by a namespace stored
+	// natively in Biglake
+	CatalogSource string `json:"catalogSource,omitempty"`
 	// CreationTime: Output only. The time when this dataset was created, in
 	// milliseconds since the epoch.
 	CreationTime int64 `json:"creationTime,omitempty,string"`
@@ -2142,6 +2281,11 @@ type Dataset struct {
 	// dataset defined in data catalogs outside of BigQuery. Filled out when the
 	// dataset type is EXTERNAL.
 	ExternalDatasetReference *ExternalDatasetReference `json:"externalDatasetReference,omitempty"`
+	// FailoverReservationId: Optional. The failover reservation associated with
+	// the dataset in the regionless format. Example: .. To learn about about
+	// failover reservations see:
+	// https://docs.cloud.google.com/bigquery/docs/managed-disaster-recovery#overview
+	FailoverReservationId string `json:"failoverReservationId,omitempty"`
 	// FriendlyName: Optional. A descriptive name for the dataset.
 	FriendlyName string `json:"friendlyName,omitempty"`
 	// Id: Output only. The fully-qualified unique name of the dataset in the
@@ -2180,6 +2324,9 @@ type Dataset struct {
 	// value can be from 48 to 168 hours (2 to 7 days). The default value is 168
 	// hours if this is not set.
 	MaxTimeTravelHours int64 `json:"maxTimeTravelHours,omitempty,string"`
+	// Replicas: Optional. The list of replicas in a cross region replicated or
+	// disaster recovery dataset.
+	Replicas []*Replica `json:"replicas,omitempty"`
 	// ResourceTags: Optional. The tags
 	// (https://cloud.google.com/bigquery/docs/tags) attached to this dataset. Tag
 	// keys are globally unique. Tag key is expected to be in the namespaced
@@ -2217,7 +2364,9 @@ type Dataset struct {
 	// Type: Output only. Same as `type` in `ListFormatDataset`. The type of the
 	// dataset, one of: * DEFAULT - only accessible by owner and authorized
 	// accounts, * PUBLIC - accessible by everyone, * LINKED - linked dataset, *
-	// EXTERNAL - dataset with definition in external metadata catalog.
+	// EXTERNAL - dataset with definition in external metadata catalog, *
+	// BIGLAKE_ICEBERG - a Biglake dataset accessible through the Iceberg API, *
+	// BIGLAKE_HIVE - a Biglake dataset accessible through the Hive API.
 	Type string `json:"type,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the server.
@@ -2417,6 +2566,10 @@ func (s DatasetList) MarshalJSON() ([]byte, error) {
 // DatasetListDatasets: A dataset resource with only a subset of fields, to be
 // returned in a list of datasets.
 type DatasetListDatasets struct {
+	// CatalogSource: Output only. The origin of the dataset, one of: * (Unset) -
+	// Native BigQuery Dataset. * BIGLAKE - Dataset is backed by a namespace stored
+	// natively in Biglake.
+	CatalogSource string `json:"catalogSource,omitempty"`
 	// DatasetReference: The dataset reference. Use this property to access
 	// specific parts of the dataset's ID, such as project ID or dataset ID.
 	DatasetReference *DatasetReference `json:"datasetReference,omitempty"`
@@ -2437,15 +2590,22 @@ type DatasetListDatasets struct {
 	Labels map[string]string `json:"labels,omitempty"`
 	// Location: The geographic location where the dataset resides.
 	Location string `json:"location,omitempty"`
-	// ForceSendFields is a list of field names (e.g. "DatasetReference") to
+	// Type: Output only. Same as `type` in `Dataset`. The type of the dataset, one
+	// of: * DEFAULT - only accessible by owner and authorized accounts, * PUBLIC -
+	// accessible by everyone, * LINKED - linked dataset, * EXTERNAL - dataset with
+	// definition in external metadata catalog, * BIGLAKE_ICEBERG - a Biglake
+	// dataset accessible through the Iceberg API, * BIGLAKE_HIVE - a Biglake
+	// dataset accessible through the Hive API.
+	Type string `json:"type,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "CatalogSource") to
 	// unconditionally include in API requests. By default, fields with empty or
 	// default values are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
 	// details.
 	ForceSendFields []string `json:"-"`
-	// NullFields is a list of field names (e.g. "DatasetReference") to include in
-	// API requests with the JSON null value. By default, fields with empty values
-	// are omitted from API requests. See
+	// NullFields is a list of field names (e.g. "CatalogSource") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
 	NullFields []string `json:"-"`
 }
@@ -2662,6 +2822,26 @@ type DmlStatistics struct {
 	// DeletedRowCount: Output only. Number of deleted Rows. populated by DML
 	// DELETE, MERGE and TRUNCATE statements.
 	DeletedRowCount int64 `json:"deletedRowCount,omitempty,string"`
+	// DmlMode: Output only. DML mode used.
+	//
+	// Possible values:
+	//   "DML_MODE_UNSPECIFIED" - Default value. This value is unused.
+	//   "COARSE_GRAINED_DML" - Coarse-grained DML was used.
+	//   "FINE_GRAINED_DML" - Fine-grained DML was used.
+	DmlMode string `json:"dmlMode,omitempty"`
+	// FineGrainedDmlUnusedReason: Output only. Reason for disabling fine-grained
+	// DML if applicable.
+	//
+	// Possible values:
+	//   "FINE_GRAINED_DML_UNUSED_REASON_UNSPECIFIED" - Default value. This value
+	// is unused.
+	//   "MAX_PARTITION_SIZE_EXCEEDED" - Max partition size threshold exceeded.
+	// [Fine-grained DML Limitations]
+	// (https://docs.cloud.google.com/bigquery/docs/data-manipulation-language#fine-grained-dml-limitations)
+	//   "TABLE_NOT_ENROLLED" - The table is not enrolled for fine-grained DML.
+	//   "DML_IN_MULTI_STATEMENT_TRANSACTION" - The DML statement is part of a
+	// multi-statement transaction.
+	FineGrainedDmlUnusedReason string `json:"fineGrainedDmlUnusedReason,omitempty"`
 	// InsertedRowCount: Output only. Number of inserted Rows. Populated by DML
 	// INSERT and MERGE statements
 	InsertedRowCount int64 `json:"insertedRowCount,omitempty,string"`
@@ -3405,14 +3585,15 @@ type ExternalDataConfiguration struct {
 	TimestampFormat string `json:"timestampFormat,omitempty"`
 	// TimestampTargetPrecision: Precisions (maximum number of total digits in base
 	// 10) for seconds of TIMESTAMP types that are allowed to the destination table
-	// for autodetection mode. Available for the formats: CSV. For the CSV Format,
-	// Possible values include: Not Specified, [], or [6]: timestamp(6) for all
-	// auto detected TIMESTAMP columns [6, 12]: timestamp(6) for all auto detected
-	// TIMESTAMP columns that have less than 6 digits of subseconds. timestamp(12)
-	// for all auto detected TIMESTAMP columns that have more than 6 digits of
-	// subseconds. [12]: timestamp(12) for all auto detected TIMESTAMP columns. The
-	// order of the elements in this array is ignored. Inputs that have higher
-	// precision than the highest target precision in this array will be truncated.
+	// for autodetection mode. Available for the formats: CSV, PARQUET, AVRO, and
+	// Iceberg External Table. Possible values include: Not Specified, [], or [6]:
+	// timestamp(6) for all auto detected TIMESTAMP columns [6, 12]: timestamp(6)
+	// for all auto detected TIMESTAMP columns that have less than 6 digits of
+	// subseconds. timestamp(12) for all auto detected TIMESTAMP columns that have
+	// more than 6 digits of subseconds. [12]: timestamp(12) for all auto detected
+	// TIMESTAMP columns. The order of the elements in this array is ignored.
+	// Inputs that have higher precision than the highest target precision in this
+	// array will be truncated.
 	TimestampTargetPrecision []int64 `json:"timestampTargetPrecision,omitempty"`
 	// ForceSendFields is a list of field names (e.g. "Autodetect") to
 	// unconditionally include in API requests. By default, fields with empty or
@@ -3472,6 +3653,12 @@ type ExternalRuntimeOptions struct {
 	// 512Mi. For more information, see Configure container limits for Python UDFs
 	// (https://cloud.google.com/bigquery/docs/user-defined-functions-python#configure-container-limits)
 	ContainerMemory string `json:"containerMemory,omitempty"`
+	// ContainerRequestConcurrency: Optional. Maximum number of requests that a
+	// Python UDF instance can handle concurrently. If absent or if `0`, the
+	// default concurrency value is used. For more information, see Configure
+	// container limits for Python UDFs
+	// (https://cloud.google.com/bigquery/docs/user-defined-functions-python#configure-container-limits).
+	ContainerRequestConcurrency int64 `json:"containerRequestConcurrency,omitempty,string"`
 	// MaxBatchingRows: Optional. Maximum number of rows in each batch sent to the
 	// external runtime. If absent or if 0, BigQuery dynamically decides the number
 	// of rows in a batch.
@@ -3483,6 +3670,9 @@ type ExternalRuntimeOptions struct {
 	RuntimeConnection string `json:"runtimeConnection,omitempty"`
 	// RuntimeVersion: Optional. Language runtime version. Example: `python-3.11`.
 	RuntimeVersion string `json:"runtimeVersion,omitempty"`
+	// VolumeMounts: Optional. List of volume mounts for the Python UDF container
+	// that executes the managed function.
+	VolumeMounts []*ExternalVolumeMount `json:"volumeMounts,omitempty"`
 	// ForceSendFields is a list of field names (e.g. "ContainerCpu") to
 	// unconditionally include in API requests. By default, fields with empty or
 	// default values are omitted from API requests. See
@@ -3557,6 +3747,35 @@ type ExternalServiceCost struct {
 
 func (s ExternalServiceCost) MarshalJSON() ([]byte, error) {
 	type NoMethod ExternalServiceCost
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// ExternalVolumeMount: Configuration of a volume mount for the Python UDF
+// container that executes the managed function.
+type ExternalVolumeMount struct {
+	// MountPath: Optional. The absolute path within the container where the volume
+	// should be mounted.
+	MountPath string `json:"mountPath,omitempty"`
+	// SourcePath: Optional. The absolute path of the source to be mounted, only
+	// support Google Cloud Storage bucket or folder now. Eg: gs://bucket-xxx for
+	// Google Cloud Storage bucket, gs://bucket-xxx/folder1/folder2 for Google
+	// Cloud Storage folder.
+	SourcePath string `json:"sourcePath,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "MountPath") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "MountPath") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s ExternalVolumeMount) MarshalJSON() ([]byte, error) {
+	type NoMethod ExternalVolumeMount
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
@@ -3652,6 +3871,230 @@ type ForeignViewDefinition struct {
 
 func (s ForeignViewDefinition) MarshalJSON() ([]byte, error) {
 	type NoMethod ForeignViewDefinition
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// GenAiErrorStats: Provides error statistics for the query job across all AI
+// function calls.
+type GenAiErrorStats struct {
+	// Errors: A list of unique errors at query level (up to 5, truncated to 100
+	// chars)
+	Errors []string `json:"errors,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "Errors") to unconditionally
+	// include in API requests. By default, fields with empty or default values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "Errors") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s GenAiErrorStats) MarshalJSON() ([]byte, error) {
+	type NoMethod GenAiErrorStats
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// GenAiFunctionCacheStats: Provides cache statistics for a GenAi function
+// call.
+type GenAiFunctionCacheStats struct {
+	// NumCacheHitRows: Number of rows served from cache.
+	NumCacheHitRows int64 `json:"numCacheHitRows,omitempty,string"`
+	// ForceSendFields is a list of field names (e.g. "NumCacheHitRows") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "NumCacheHitRows") to include in
+	// API requests with the JSON null value. By default, fields with empty values
+	// are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s GenAiFunctionCacheStats) MarshalJSON() ([]byte, error) {
+	type NoMethod GenAiFunctionCacheStats
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// GenAiFunctionCostOptimizationStats: Provides cost optimization statistics
+// for a GenAi function call.
+type GenAiFunctionCostOptimizationStats struct {
+	// Message: System generated message to provide insights into cost optimization
+	// state.
+	Message string `json:"message,omitempty"`
+	// NumCostOptimizedRows: Number of rows inferred via cost optimized workflow.
+	NumCostOptimizedRows int64 `json:"numCostOptimizedRows,omitempty,string"`
+	// ForceSendFields is a list of field names (e.g. "Message") to unconditionally
+	// include in API requests. By default, fields with empty or default values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "Message") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s GenAiFunctionCostOptimizationStats) MarshalJSON() ([]byte, error) {
+	type NoMethod GenAiFunctionCostOptimizationStats
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// GenAiFunctionErrorStats: Provides error statistics for a GenAi function
+// call.
+type GenAiFunctionErrorStats struct {
+	// Errors: A list of unique errors at function level (up to 5, truncated to 100
+	// chars).
+	Errors []string `json:"errors,omitempty"`
+	// NumFailedRows: Number of failed rows processed by the function
+	NumFailedRows int64 `json:"numFailedRows,omitempty,string"`
+	// ForceSendFields is a list of field names (e.g. "Errors") to unconditionally
+	// include in API requests. By default, fields with empty or default values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "Errors") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s GenAiFunctionErrorStats) MarshalJSON() ([]byte, error) {
+	type NoMethod GenAiFunctionErrorStats
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// GenAiFunctionStats: Provides statistics for each Ai function call within a
+// query.
+type GenAiFunctionStats struct {
+	// CacheStats: Cache stats for the function.
+	CacheStats *GenAiFunctionCacheStats `json:"cacheStats,omitempty"`
+	// CostOptimizationStats: Cost optimization stats if applied on the rows
+	// processed by the function.
+	CostOptimizationStats *GenAiFunctionCostOptimizationStats `json:"costOptimizationStats,omitempty"`
+	// ErrorStats: Error stats for the function.
+	ErrorStats *GenAiFunctionErrorStats `json:"errorStats,omitempty"`
+	// FunctionName: Name of the function.
+	FunctionName string `json:"functionName,omitempty"`
+	// NumProcessedRows: Number of rows processed by this GenAi function. This
+	// includes all cost_optimized, llm_inferred and failed_rows.
+	NumProcessedRows int64 `json:"numProcessedRows,omitempty,string"`
+	// Prompt: User input prompt of the function (truncated to 20 chars).
+	Prompt string `json:"prompt,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "CacheStats") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "CacheStats") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s GenAiFunctionStats) MarshalJSON() ([]byte, error) {
+	type NoMethod GenAiFunctionStats
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// GenAiStats: GenAi stats for the query job.
+type GenAiStats struct {
+	// ErrorStats: Job level error stats across all GenAi functions
+	ErrorStats *GenAiErrorStats `json:"errorStats,omitempty"`
+	// FunctionStats: Function level stats for GenAI Functions. For more
+	// information, see Generative AI overview
+	// (https://docs.cloud.google.com/bigquery/docs/generative-ai-overview).
+	FunctionStats []*GenAiFunctionStats `json:"functionStats,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "ErrorStats") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "ErrorStats") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s GenAiStats) MarshalJSON() ([]byte, error) {
+	type NoMethod GenAiStats
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// GeneratedColumn: Optional. Definition of how values are generated for the
+// field. Only valid for top-level schema fields (not nested fields).
+type GeneratedColumn struct {
+	// GeneratedExpressionInfo: Definition of the expression used to generate the
+	// field.
+	GeneratedExpressionInfo *GeneratedExpressionInfo `json:"generatedExpressionInfo,omitempty"`
+	// GeneratedMode: Optional. Dictates when system generated values are used to
+	// populate the field.
+	//
+	// Possible values:
+	//   "GENERATED_MODE_UNSPECIFIED" - Unspecified GeneratedMode will default to
+	// GENERATED_ALWAYS.
+	//   "GENERATED_ALWAYS" - Field can only have system generated values. Users
+	// cannot manually insert values into the field.
+	//   "GENERATED_BY_DEFAULT" - Use system generated values only if the user does
+	// not explicitly provide a value.
+	GeneratedMode string `json:"generatedMode,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "GeneratedExpressionInfo") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "GeneratedExpressionInfo") to
+	// include in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s GeneratedColumn) MarshalJSON() ([]byte, error) {
+	type NoMethod GeneratedColumn
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// GeneratedExpressionInfo: Definition of the expression used to generate the
+// field.
+type GeneratedExpressionInfo struct {
+	// Asynchronous: Optional. Whether the column generation is done
+	// asynchronously.
+	Asynchronous bool `json:"asynchronous,omitempty"`
+	// GenerationExpression: Optional. The generation expression (e.g.
+	// AI.EMBED(...)) used to generate the field.
+	GenerationExpression string `json:"generationExpression,omitempty"`
+	// Stored: Optional. Whether the generated column is stored in the table.
+	Stored bool `json:"stored,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "Asynchronous") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "Asynchronous") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s GeneratedExpressionInfo) MarshalJSON() ([]byte, error) {
+	type NoMethod GeneratedExpressionInfo
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
@@ -4111,6 +4554,20 @@ type IncrementalResultStats struct {
 	//   "UNSUPPORTED_OPERATOR" - Query includes an operation that is not
 	// supported.
 	DisabledReason string `json:"disabledReason,omitempty"`
+	// DisabledReasonDetails: Output only. Additional human-readable clarification,
+	// if available, for DisabledReason.
+	DisabledReasonDetails string `json:"disabledReasonDetails,omitempty"`
+	// FirstIncrementalRowTime: Output only. The time at which the first
+	// incremental result was written. If the query needed to restart internally,
+	// this only describes the final attempt.
+	FirstIncrementalRowTime string `json:"firstIncrementalRowTime,omitempty"`
+	// IncrementalRowCount: Output only. Number of rows that were in the latest
+	// result set before query completion.
+	IncrementalRowCount int64 `json:"incrementalRowCount,omitempty,string"`
+	// LastIncrementalRowTime: Output only. The time at which the last incremental
+	// result was written. Does not include the final result written after query
+	// completion.
+	LastIncrementalRowTime string `json:"lastIncrementalRowTime,omitempty"`
 	// ResultSetLastModifyTime: Output only. The time at which the result table's
 	// contents were modified. May be absent if no results have been written or the
 	// query has completed.
@@ -4288,6 +4745,36 @@ func (s *InputDataChange) UnmarshalJSON(data []byte) error {
 	}
 	s.RecordsReadDiffPercentage = float64(s1.RecordsReadDiffPercentage)
 	return nil
+}
+
+// InstalledPackage:  Information about a package installed in the routine
+// execution environment.
+type InstalledPackage struct {
+	// Name: Output only. The name of the installed package.
+	Name string `json:"name,omitempty"`
+	// SourceRepository: Output only. The source repository from which this package
+	// was installed. Populated only when the package was installed from an
+	// additional package repository. E.g.
+	// 'https://my-region-python.pkg.dev/my-project/my-repo/simple'
+	SourceRepository string `json:"sourceRepository,omitempty"`
+	// Version: Output only. The version of the installed package.
+	Version string `json:"version,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "Name") to unconditionally
+	// include in API requests. By default, fields with empty or default values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "Name") to include in API requests
+	// with the JSON null value. By default, fields with empty values are omitted
+	// from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s InstalledPackage) MarshalJSON() ([]byte, error) {
+	type NoMethod InstalledPackage
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
 // IntArray: An array of int.
@@ -4575,7 +5062,10 @@ type JobConfiguration struct {
 	// a reservation to execute the job. If reservation is not set, reservation is
 	// determined based on the rules defined by the reservation assignments. The
 	// expected format is
-	// `projects/{project}/locations/{location}/reservations/{reservation}`.
+	// `projects/{project}/locations/{location}/reservations/{reservation}`. Forces
+	// the query to use on-demand billing when set to `none`, which requires the
+	// project or organization to have `reservation_override_mode` set to
+	// `ALLOW_ANY_OVERRIDE`.
 	Reservation string `json:"reservation,omitempty"`
 	// ForceSendFields is a list of field names (e.g. "Copy") to unconditionally
 	// include in API requests. By default, fields with empty or default values are
@@ -4624,11 +5114,20 @@ type JobConfigurationExtract struct {
 	// ModelExtractOptions: Optional. Model extract options only applicable when
 	// extracting models.
 	ModelExtractOptions *ModelExtractOptions `json:"modelExtractOptions,omitempty"`
+	// NativeGeographyExportEnabled: Optional. Applicable to formats: PARQUET. If
+	// enabled, BigQuery to Parquet export will write the native Parquet Geography
+	// type instead of the default GeoParquet type.
+	NativeGeographyExportEnabled bool `json:"nativeGeographyExportEnabled,omitempty"`
 	// PrintHeader: Optional. Whether to print out a header row in the results.
 	// Default is true. Not applicable when extracting models.
 	//
 	// Default: true
 	PrintHeader *bool `json:"printHeader,omitempty"`
+	// SecureContext: Optional. A set of key-value pairs representing the secure
+	// context. This can be used to pass sensitive or context-specific information.
+	// They can be retrieved via the SECURE_CONTEXT() function and used to modify
+	// the run-time behavior of an extract job on tables with row access policies.
+	SecureContext *SecureContext `json:"secureContext,omitempty"`
 	// SourceModel: A reference to the model being exported.
 	SourceModel *ModelReference `json:"sourceModel,omitempty"`
 	// SourceTable: A reference to the table being exported.
@@ -4951,14 +5450,15 @@ type JobConfigurationLoad struct {
 	TimestampFormat string `json:"timestampFormat,omitempty"`
 	// TimestampTargetPrecision: Precisions (maximum number of total digits in base
 	// 10) for seconds of TIMESTAMP types that are allowed to the destination table
-	// for autodetection mode. Available for the formats: CSV. For the CSV Format,
-	// Possible values include: Not Specified, [], or [6]: timestamp(6) for all
-	// auto detected TIMESTAMP columns [6, 12]: timestamp(6) for all auto detected
-	// TIMESTAMP columns that have less than 6 digits of subseconds. timestamp(12)
-	// for all auto detected TIMESTAMP columns that have more than 6 digits of
-	// subseconds. [12]: timestamp(12) for all auto detected TIMESTAMP columns. The
-	// order of the elements in this array is ignored. Inputs that have higher
-	// precision than the highest target precision in this array will be truncated.
+	// for autodetection mode. Available for the formats: CSV, PARQUET, AVRO, and
+	// Iceberg External Table. Possible values include: Not Specified, [], or [6]:
+	// timestamp(6) for all auto detected TIMESTAMP columns [6, 12]: timestamp(6)
+	// for all auto detected TIMESTAMP columns that have less than 6 digits of
+	// subseconds. timestamp(12) for all auto detected TIMESTAMP columns that have
+	// more than 6 digits of subseconds. [12]: timestamp(12) for all auto detected
+	// TIMESTAMP columns. The order of the elements in this array is ignored.
+	// Inputs that have higher precision than the highest target precision in this
+	// array will be truncated.
 	TimestampTargetPrecision []int64 `json:"timestampTargetPrecision,omitempty"`
 	// UseAvroLogicalTypes: Optional. If sourceFormat is set to "AVRO", indicates
 	// whether to interpret logical types as the corresponding BigQuery data type
@@ -5098,6 +5598,11 @@ type JobConfigurationQuery struct {
 	SchemaUpdateOptions []string `json:"schemaUpdateOptions,omitempty"`
 	// ScriptOptions: Options controlling the execution of scripts.
 	ScriptOptions *ScriptOptions `json:"scriptOptions,omitempty"`
+	// SecureContext: Optional. A set of key-value pairs representing the secure
+	// context. This can be used to pass sensitive or context-specific information.
+	// They can be retrieved via the SECURE_CONTEXT() function and used to modify
+	// the run-time behavior of a query.
+	SecureContext *SecureContext `json:"secureContext,omitempty"`
 	// SystemVariables: Output only. System variables for GoogleSQL queries. A
 	// system variable is output if the variable is settable and its value differs
 	// from the system default. "@@" prefix is not included in the name of the
@@ -5417,10 +5922,25 @@ type JobStatistics struct {
 	// execution of the final attempt of this job, as BigQuery may internally
 	// re-attempt to execute the job.
 	FinalExecutionDurationMs int64 `json:"finalExecutionDurationMs,omitempty,string"`
+	// GlobalQueryRemoteRegions: Output only. The list of remote regions from which
+	// a global query accesses data. This field is populated only for parent global
+	// query jobs in the primary execution region. It is empty for child global
+	// query jobs and single-region queries. For more information, see Global
+	// queries (https://cloud.google.com/bigquery/docs/global-queries).
+	GlobalQueryRemoteRegions []string `json:"globalQueryRemoteRegions,omitempty"`
 	// Load: Output only. Statistics for a load job.
 	Load *JobStatistics3 `json:"load,omitempty"`
 	// NumChildJobs: Output only. Number of child jobs executed.
 	NumChildJobs int64 `json:"numChildJobs,omitempty,string"`
+	// ParentGlobalQueryJob: Output only. Reference to the parent global query job,
+	// if this is a child global query job. This field is populated only for child
+	// global query jobs (remote subqueries or cross-region table copy jobs)
+	// executed in remote regions on behalf of a global query. It contains the
+	// project ID, job ID, and location of the parent global query job. It is unset
+	// for parent global query jobs and single-region queries. For more
+	// information, see Global queries
+	// (https://cloud.google.com/bigquery/docs/global-queries).
+	ParentGlobalQueryJob *JobReference `json:"parentGlobalQueryJob,omitempty"`
 	// ParentJobId: Output only. If this is a child job, specifies the job ID of
 	// the parent.
 	ParentJobId string `json:"parentJobId,omitempty"`
@@ -5430,8 +5950,8 @@ type JobStatistics struct {
 	QuotaDeferments []string `json:"quotaDeferments,omitempty"`
 	// ReservationGroupPath: Output only. The reservation group path of the
 	// reservation assigned to this job. This field has a limit of 10 nested
-	// reservation groups. This is to maintain consistency between reservatins info
-	// schema and jobs info schema. The first reservation group is the root
+	// reservation groups. This is to maintain consistency between reservations
+	// info schema and jobs info schema. The first reservation group is the root
 	// reservation group and the last is the leaf or lowest level reservation
 	// group.
 	ReservationGroupPath []string `json:"reservationGroupPath,omitempty"`
@@ -5577,6 +6097,8 @@ type JobStatistics2 struct {
 	// ExternalServiceCosts: Output only. Job cost breakdown as bigquery internal
 	// cost and external service costs.
 	ExternalServiceCosts []*ExternalServiceCost `json:"externalServiceCosts,omitempty"`
+	// GenAiStats: Output only. Statistics related to GenAI usage in the query.
+	GenAiStats *GenAiStats `json:"genAiStats,omitempty"`
 	// IncrementalResultStats: Output only. Statistics related to incremental query
 	// results, if enabled for the query. This feature is not yet available.
 	IncrementalResultStats *IncrementalResultStats `json:"incrementalResultStats,omitempty"`
@@ -5599,12 +6121,21 @@ type JobStatistics2 struct {
 	// NumDmlAffectedRows: Output only. The number of rows affected by a DML
 	// statement. Present only for DML statements INSERT, UPDATE or DELETE.
 	NumDmlAffectedRows int64 `json:"numDmlAffectedRows,omitempty,string"`
+	// ObjectStorageStats: Output only. Storage and caching statistics per cloud
+	// provider for queries over object storage.
+	ObjectStorageStats []*ObjectStorageStats `json:"objectStorageStats,omitempty"`
 	// PerformanceInsights: Output only. Performance insights.
 	PerformanceInsights *PerformanceInsights `json:"performanceInsights,omitempty"`
 	// QueryInfo: Output only. Query optimization information for a QUERY job.
 	QueryInfo *QueryInfo `json:"queryInfo,omitempty"`
 	// QueryPlan: Output only. Describes execution plan for the query.
 	QueryPlan []*ExplainQueryStage `json:"queryPlan,omitempty"`
+	// ReferencedLogicalViews: Output only. Referenced logical views for the job.
+	ReferencedLogicalViews []*TableReference `json:"referencedLogicalViews,omitempty"`
+	// ReferencedPropertyGraphs: Output only. Referenced property graphs for the
+	// job. Queries that reference more than 50 property graphs will not have a
+	// complete list.
+	ReferencedPropertyGraphs []*PropertyGraphReference `json:"referencedPropertyGraphs,omitempty"`
 	// ReferencedRoutines: Output only. Referenced routines for the job.
 	ReferencedRoutines []*RoutineReference `json:"referencedRoutines,omitempty"`
 	// ReferencedTables: Output only. Referenced tables for the job.
@@ -5615,6 +6146,8 @@ type JobStatistics2 struct {
 	// Schema: Output only. The schema of the results. Present only for successful
 	// dry run of non-legacy SQL queries.
 	Schema *TableSchema `json:"schema,omitempty"`
+	// SearchIndexingStats: Output only. Search indexing specific statistics.
+	SearchIndexingStats *SearchIndexingStats `json:"searchIndexingStats,omitempty"`
 	// SearchStatistics: Output only. Search query specific statistics.
 	SearchStatistics *SearchStatistics `json:"searchStatistics,omitempty"`
 	// SparkStatistics: Output only. Statistics of a Spark procedure job.
@@ -5632,6 +6165,8 @@ type JobStatistics2 struct {
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-manipulation-language)
 	// statement. * `MERGE`: `MERGE`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-manipulation-language)
+	// statement. * `TRUNCATE_TABLE`: `TRUNCATE TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/dml-syntax#truncate_table_statement)
 	// statement. * `CREATE_TABLE`: `CREATE TABLE`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_table_statement)
 	// statement, without `AS SELECT`. * `CREATE_TABLE_AS_SELECT`: `CREATE TABLE AS
@@ -5653,10 +6188,28 @@ type JobStatistics2 struct {
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_row_access_policy_statement)
 	// statement. * `CREATE_SCHEMA`: `CREATE SCHEMA`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_schema_statement)
+	// statement. * `CREATE_EXTERNAL_SCHEMA`: `CREATE EXTERNAL SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_external_schema_statement)
+	// statement. * `CREATE_EXTERNAL_TABLE`: `CREATE EXTERNAL TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_external_table_statement)
 	// statement. * `CREATE_SNAPSHOT_TABLE`: `CREATE SNAPSHOT TABLE`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_snapshot_table_statement)
 	// statement. * `CREATE_SEARCH_INDEX`: `CREATE SEARCH INDEX`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_search_index_statement)
+	// statement. * `CREATE_VECTOR_INDEX`: `CREATE VECTOR INDEX`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_vector_index_statement)
+	// statement. * `CREATE_CONNECTION`: `CREATE CONNECTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_connection_statement)
+	// statement. * `CREATE_DATA_POLICY`: `CREATE DATA_POLICY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_data_policy_statement)
+	// statement. * `CREATE_PROPERTY_GRAPH`: `CREATE PROPERTY GRAPH`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/graph-schema-statements#gql_create_graph)
+	// statement. * `CREATE_CAPACITY`: `CREATE CAPACITY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_capacity_statement)
+	// statement. * `CREATE_RESERVATION`: `CREATE RESERVATION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_reservation_statement)
+	// statement. * `CREATE_ASSIGNMENT`: `CREATE ASSIGNMENT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_assignment_statement)
 	// statement. * `DROP_TABLE`: `DROP TABLE`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_table_statement)
 	// statement. * `DROP_EXTERNAL_TABLE`: `DROP EXTERNAL TABLE`
@@ -5667,21 +6220,37 @@ type JobStatistics2 struct {
 	// (https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-drop-model)
 	// statement. * `DROP_MATERIALIZED_VIEW`: `DROP MATERIALIZED VIEW`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_materialized_view_statement)
-	// statement. * `DROP_FUNCTION` : `DROP FUNCTION`
+	// statement. * `DROP_FUNCTION`: `DROP FUNCTION`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_function_statement)
-	// statement. * `DROP_TABLE_FUNCTION` : `DROP TABLE FUNCTION`
+	// statement. * `DROP_TABLE_FUNCTION`: `DROP TABLE FUNCTION`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_table_function)
 	// statement. * `DROP_PROCEDURE`: `DROP PROCEDURE`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_procedure_statement)
 	// statement. * `DROP_SEARCH_INDEX`: `DROP SEARCH INDEX`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_search_index)
+	// statement. * `DROP_VECTOR_INDEX`: `DROP VECTOR INDEX`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_vector_index)
 	// statement. * `DROP_SCHEMA`: `DROP SCHEMA`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_schema_statement)
+	// statement. * `UNDROP_SCHEMA`: `UNDROP SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#undrop_schema_statement)
 	// statement. * `DROP_SNAPSHOT_TABLE`: `DROP SNAPSHOT TABLE`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_snapshot_table_statement)
 	// statement. * `DROP_ROW_ACCESS_POLICY`: [`DROP ALL] ROW ACCESS
 	// POLICY|POLICIES`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_row_access_policy_statement)
+	// statement. * `DROP_CONNECTION`: `DROP CONNECTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_connection_statement)
+	// statement. * `DROP_DATA_POLICY`: `DROP DATA_POLICY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_data_policy)
+	// statement. * `DROP_PROPERTY_GRAPH`: `DROP PROPERTY GRAPH`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/graph-schema-statements#gql_drop_graph)
+	// statement. * `DROP_CAPACITY`: `DROP CAPACITY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_capacity_statement)
+	// statement. * `DROP_RESERVATION`: `DROP RESERVATION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_reservation_statement)
+	// statement. * `DROP_ASSIGNMENT`: `DROP ASSIGNMENT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_assignment_statement)
 	// statement. * `ALTER_TABLE`: `ALTER TABLE`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_table_set_options_statement)
 	// statement. * `ALTER_VIEW`: `ALTER VIEW`
@@ -5690,20 +6259,62 @@ type JobStatistics2 struct {
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_materialized_view_set_options_statement)
 	// statement. * `ALTER_SCHEMA`: `ALTER SCHEMA`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_schema_set_options_statement)
+	// statement. * `ALTER_MODEL`: `ALTER MODEL`
+	// (https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-alter-model)
+	// statement. * `ALTER_SEARCH_INDEX`: `ALTER SEARCH INDEX`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_search_index_statement)
+	// statement. * `ALTER_VECTOR_INDEX`: `ALTER VECTOR INDEX`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_vector_index_rebuild_statement)
+	// statement. * `ALTER_CONNECTION`: `ALTER CONNECTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_connection_set_options_statement)
+	// statement. * `ALTER_DATA_POLICY`: `ALTER DATA_POLICY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_data_policy_statement)
+	// statement. * `ALTER_PROJECT`: `ALTER PROJECT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_project_set_options_statement)
+	// statement. * `ALTER_ORGANIZATION`: `ALTER ORGANIZATION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_organization_set_options_statement)
+	// statement. * `ALTER_BI_CAPACITY`: `ALTER BI_CAPACITY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_bi_capacity_set_options_statement)
+	// statement. * `ALTER_CAPACITY`: `ALTER CAPACITY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_capacity_set_options_statement)
+	// statement. * `ALTER_RESERVATION`: `ALTER RESERVATION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_reservation_set_options_statement)
 	// statement. * `SCRIPT`: `SCRIPT`
-	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language).
-	// * `TRUNCATE_TABLE`: `TRUNCATE TABLE`
-	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/dml-syntax#truncate_table_statement)
-	// statement. * `CREATE_EXTERNAL_TABLE`: `CREATE EXTERNAL TABLE`
-	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_external_table_statement)
-	// statement. * `EXPORT_DATA`: `EXPORT DATA`
-	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/other-statements#export_data_statement)
-	// statement. * `EXPORT_MODEL`: `EXPORT MODEL`
-	// (https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-export-model)
-	// statement. * `LOAD_DATA`: `LOAD DATA`
-	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/other-statements#load_data_statement)
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language)
 	// statement. * `CALL`: `CALL`
 	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language#call)
+	// statement. * `BEGIN_TRANSACTION`: `BEGIN TRANSACTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language#begin_transaction)
+	// statement. * `COMMIT_TRANSACTION`: `COMMIT TRANSACTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language#commit_transaction)
+	// statement. * `ROLLBACK_TRANSACTION`: `ROLLBACK TRANSACTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language#rollback_transaction)
+	// statement. * `EXPORT_DATA`: `EXPORT DATA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/export-statements#export_data_statement)
+	// statement. * `EXPORT_MODEL`: `EXPORT MODEL`
+	// (https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-export-model)
+	// statement. * `EXPORT_METADATA`: `EXPORT TABLE METADATA`
+	// (https://cloud.google.com/bigquery/docs/biglake-iceberg-tables-in-bigquery)
+	// statement, for BigLake Iceberg tables. * `LOAD_DATA`: `LOAD DATA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/load-statements#load_data_statement)
+	// statement. * `GRANT_ON_SCHEMA`: `GRANT ... ON SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#grant_statement)
+	// statement. * `GRANT_ON_TABLE`: `GRANT ... ON TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#grant_statement)
+	// statement. Also used for `GRANT ... ON EXTERNAL TABLE`. * `GRANT_ON_VIEW`:
+	// `GRANT ... ON VIEW`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#grant_statement)
+	// statement. * `GRANT_ON_PROJECT`: `GRANT ... ON PROJECT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#grant_statement)
+	// statement. * `REVOKE_ON_SCHEMA`: `REVOKE ... ON SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#revoke_statement)
+	// statement. * `REVOKE_ON_TABLE`: `REVOKE ... ON TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#revoke_statement)
+	// statement. Also used for `REVOKE ... ON EXTERNAL TABLE`. * `REVOKE_ON_VIEW`:
+	// `REVOKE ... ON VIEW`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#revoke_statement)
+	// statement. * `REVOKE_ON_PROJECT`: `REVOKE ... ON PROJECT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#revoke_statement)
 	// statement.
 	StatementType string `json:"statementType,omitempty"`
 	// Timeline: Output only. Describes a timeline of job execution.
@@ -5732,12 +6343,18 @@ type JobStatistics2 struct {
 	TotalServicesSkuSlotMs int64 `json:"totalServicesSkuSlotMs,omitempty,string"`
 	// TotalSlotMs: Output only. Slot-milliseconds for the job.
 	TotalSlotMs int64 `json:"totalSlotMs,omitempty,string"`
-	// TransferredBytes: Output only. Total bytes transferred for cross-cloud
-	// queries such as Cross Cloud Transfer and CREATE TABLE AS SELECT (CTAS).
+	// TransferredBytes: Output only. Total bytes transferred for BigQuery Omni
+	// queries from the remote cloud back to Google Cloud. This tracks data
+	// movement over Google-managed connections (like query results). It doesn't
+	// include input data read from the external data lake (for example, S3)
+	// because that data stays within the remote cloud.
 	TransferredBytes int64 `json:"transferredBytes,omitempty,string"`
 	// UndeclaredQueryParameters: Output only. GoogleSQL only: list of undeclared
 	// query parameters detected during a dry run validation.
 	UndeclaredQueryParameters []*QueryParameter `json:"undeclaredQueryParameters,omitempty"`
+	// VectorSearchIndexingStats: Output only. Vector Search indexing specific
+	// statistics.
+	VectorSearchIndexingStats *VectorSearchIndexingStats `json:"vectorSearchIndexingStats,omitempty"`
 	// VectorSearchStatistics: Output only. Vector Search query specific
 	// statistics.
 	VectorSearchStatistics *VectorSearchStatistics `json:"vectorSearchStatistics,omitempty"`
@@ -5860,6 +6477,9 @@ type JobStatistics5 struct {
 	CopiedLogicalBytes int64 `json:"copiedLogicalBytes,omitempty,string"`
 	// CopiedRows: Output only. Number of rows copied to the destination table.
 	CopiedRows int64 `json:"copiedRows,omitempty,string"`
+	// RemoteDestinationRegion: Output only. Destination region for a cross-region
+	// copy job. Not set for in-region copy jobs.
+	RemoteDestinationRegion string `json:"remoteDestinationRegion,omitempty"`
 	// ForceSendFields is a list of field names (e.g. "CopiedLogicalBytes") to
 	// unconditionally include in API requests. By default, fields with empty or
 	// default values are omitted from API requests. See
@@ -6342,6 +6962,48 @@ func (s MaterializedViewStatus) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
+// MetadataCacheStalenessInsight: Column Metadata Index staleness detailed
+// infnormation.
+type MetadataCacheStalenessInsight struct {
+	// AvgPreviousStalenessMs: Output only. Average column metadata index staleness
+	// of previous runs with the same query hash.
+	AvgPreviousStalenessMs string `json:"avgPreviousStalenessMs,omitempty"`
+	// StalenessPercentageIncrease: Output only. The percent increase in staleness
+	// between the current job and the average staleness of previous jobs with the
+	// same query hash.
+	StalenessPercentageIncrease float64 `json:"stalenessPercentageIncrease,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "AvgPreviousStalenessMs") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "AvgPreviousStalenessMs") to
+	// include in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s MetadataCacheStalenessInsight) MarshalJSON() ([]byte, error) {
+	type NoMethod MetadataCacheStalenessInsight
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+func (s *MetadataCacheStalenessInsight) UnmarshalJSON(data []byte) error {
+	type NoMethod MetadataCacheStalenessInsight
+	var s1 struct {
+		StalenessPercentageIncrease gensupport.JSONFloat64 `json:"stalenessPercentageIncrease"`
+		*NoMethod
+	}
+	s1.NoMethod = (*NoMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.StalenessPercentageIncrease = float64(s1.StalenessPercentageIncrease)
+	return nil
+}
+
 // MetadataCacheStatistics: Statistics for metadata caching in queried tables.
 type MetadataCacheStatistics struct {
 	// TableMetadataCacheUsage: Set for the Metadata caching eligible tables
@@ -6691,6 +7353,40 @@ func (s MultiClassClassificationMetrics) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
+// ObjectStorageStats: Storage and caching statistics for object storage.
+type ObjectStorageStats struct {
+	// CacheBytesRead: Total bytes read from the GCP Lakehouse-internal cache,
+	// avoiding an object storage read.
+	CacheBytesRead int64 `json:"cacheBytesRead,omitempty,string"`
+	// CloudProvider: The cloud provider for this block of statistics.
+	//
+	// Possible values:
+	//   "CLOUD_PROVIDER_UNSPECIFIED" - Unspecified cloud provider.
+	//   "GCP" - Google Cloud Platform.
+	//   "AWS" - Amazon Web Services.
+	//   "AZURE" - Microsoft Azure.
+	CloudProvider string `json:"cloudProvider,omitempty"`
+	// ObjectStorageBytesRead: Total bytes read directly from the cloud provider's
+	// storage.
+	ObjectStorageBytesRead int64 `json:"objectStorageBytesRead,omitempty,string"`
+	// ForceSendFields is a list of field names (e.g. "CacheBytesRead") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "CacheBytesRead") to include in
+	// API requests with the JSON null value. By default, fields with empty values
+	// are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s ObjectStorageStats) MarshalJSON() ([]byte, error) {
+	type NoMethod ObjectStorageStats
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
 // ParquetOptions: Parquet Options for load and make external tables.
 type ParquetOptions struct {
 	// EnableListInference: Optional. Indicates whether to use schema inference
@@ -6815,6 +7511,9 @@ type PerformanceInsights struct {
 	// StagePerformanceStandaloneInsights: Output only. Standalone query stage
 	// performance insights, for exploring potential improvements.
 	StagePerformanceStandaloneInsights []*StagePerformanceStandaloneInsight `json:"stagePerformanceStandaloneInsights,omitempty"`
+	// TableChangeInsights: Output only. Performance insights for table-level
+	// attributes that changed compared to previous runs.
+	TableChangeInsights []*TableChangeInsight `json:"tableChangeInsights,omitempty"`
 	// ForceSendFields is a list of field names (e.g. "AvgPreviousExecutionMs") to
 	// unconditionally include in API requests. By default, fields with empty or
 	// default values are omitted from API requests. See
@@ -7018,7 +7717,8 @@ type ProjectList struct {
 	Kind string `json:"kind,omitempty"`
 	// NextPageToken: Use this token to request the next page of results.
 	NextPageToken string `json:"nextPageToken,omitempty"`
-	// Projects: Projects to which the user has at least READ access.
+	// Projects: Projects to which the user has at least READ access. This field
+	// can be omitted if `totalItems` is 0.
 	Projects []*ProjectListProjects `json:"projects,omitempty"`
 	// TotalItems: The total number of projects in the page. A wrapper is used here
 	// because the field should still be in the response when the value is 0.
@@ -7098,6 +7798,34 @@ func (s ProjectReference) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
+// PropertyGraphReference: Id path of a property graph.
+type PropertyGraphReference struct {
+	// DatasetId: Required. The ID of the dataset containing this property graph.
+	DatasetId string `json:"datasetId,omitempty"`
+	// ProjectId: Required. The ID of the project containing this property graph.
+	ProjectId string `json:"projectId,omitempty"`
+	// PropertyGraphId: Required. The ID of the property graph. The ID must contain
+	// only letters (a-z, A-Z), numbers (0-9), or underscores (_). The maximum
+	// length is 256 characters.
+	PropertyGraphId string `json:"propertyGraphId,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "DatasetId") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "DatasetId") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s PropertyGraphReference) MarshalJSON() ([]byte, error) {
+	type NoMethod PropertyGraphReference
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
 // PruningStats: The column metadata index pruning statistics.
 type PruningStats struct {
 	// PostCmetaPruningParallelInputCount: The number of parallel inputs matched.
@@ -7128,23 +7856,35 @@ func (s PruningStats) MarshalJSON() ([]byte, error) {
 
 // PythonOptions: Options for a user-defined Python function.
 type PythonOptions struct {
+	// BuildConnection: Optional. Fully qualified name of the connection whose
+	// service account will be used to authenticate to private package repositories
+	// during build-time. Format:
+	// "projects/{project_id}/locations/{location_id}/connections/{connection_id}"
+	BuildConnection string `json:"buildConnection,omitempty"`
 	// EntryPoint: Required. The name of the function defined in Python code as the
 	// entry point when the Python UDF is invoked.
 	EntryPoint string `json:"entryPoint,omitempty"`
+	// ExtraPackageRepositories: Optional. The list of additional package
+	// repositories to search when resolving Python packages. These repositories
+	// are searched in addition to the default public PyPI. Only repositories
+	// hosted in Artifact Registry (.pkg.dev) are supported. Only pre-compiled
+	// Wheel (.whl) packages are supported from these repositories. E.g.
+	// ['https://my-region-python.pkg.dev/my-project/my-repo/simple']
+	ExtraPackageRepositories []string `json:"extraPackageRepositories,omitempty"`
 	// Packages: Optional. A list of Python package names along with versions to be
 	// installed. Example: ["pandas>=2.1", "google-cloud-translate==3.11"]. For
 	// more information, see Use third-party packages
 	// (https://cloud.google.com/bigquery/docs/user-defined-functions-python#third-party-packages).
 	Packages []string `json:"packages,omitempty"`
-	// ForceSendFields is a list of field names (e.g. "EntryPoint") to
+	// ForceSendFields is a list of field names (e.g. "BuildConnection") to
 	// unconditionally include in API requests. By default, fields with empty or
 	// default values are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
 	// details.
 	ForceSendFields []string `json:"-"`
-	// NullFields is a list of field names (e.g. "EntryPoint") to include in API
-	// requests with the JSON null value. By default, fields with empty values are
-	// omitted from API requests. See
+	// NullFields is a list of field names (e.g. "BuildConnection") to include in
+	// API requests with the JSON null value. By default, fields with empty values
+	// are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
 	NullFields []string `json:"-"`
 }
@@ -7296,6 +8036,9 @@ func (s QueryParameterValue) MarshalJSON() ([]byte, error) {
 
 // QueryRequest: Describes the format of the jobs.query request.
 type QueryRequest struct {
+	// ArrowSerializationOptions: Optional. Options specific to the Apache Arrow
+	// output format.
+	ArrowSerializationOptions *ArrowSerializationOptions `json:"arrowSerializationOptions,omitempty"`
 	// ConnectionProperties: Optional. Connection properties which can modify the
 	// query behavior.
 	ConnectionProperties []*ConnectionProperty `json:"connectionProperties,omitempty"`
@@ -7385,6 +8128,23 @@ type QueryRequest struct {
 	Query string `json:"query,omitempty"`
 	// QueryParameters: Query parameters for GoogleSQL queries.
 	QueryParameters []*QueryParameter `json:"queryParameters,omitempty"`
+	// QueryResultsFormat: Optional. The query results format. If the value is
+	// anything other than `STRUCT_ENCODING` or unspecified: * The schema of the
+	// results is provided in the `QueryResponse.results_schema` field. * The
+	// results of the first page are provided in the `QueryResponse.results` field.
+	// * The `QueryResponse.rows` is not populated. * The `QueryResponse.schema`
+	// for `QueryResponse.rows` is not populated since it is the schema of the
+	// `QueryResponse.rows`. Preview
+	// (https://cloud.google.com/products/#product-launch-stages)
+	//
+	// Possible values:
+	//   "QUERY_RESULTS_FORMAT_UNSPECIFIED" - If unspecified it will default to
+	// struct `QueryResponse.rows` (`STRUCT_ENCODING`)
+	//   "STRUCT_ENCODING" - Default encoding of results as struct in
+	// `QueryResponse.rows`
+	//   "ARROW" - Arrow is a standard open source column-based message format. See
+	// the Apache Arrow documentation for more details.
+	QueryResultsFormat string `json:"queryResultsFormat,omitempty"`
 	// RequestId: Optional. A unique user provided identifier to ensure idempotent
 	// behavior for queries. Note that this is different from the job_id. It has
 	// the following properties: 1. It is case-sensitive, limited to up to 36 ASCII
@@ -7408,7 +8168,15 @@ type QueryRequest struct {
 	// Reservation: Optional. The reservation that jobs.query request would use.
 	// User can specify a reservation to execute the job.query. The expected format
 	// is `projects/{project}/locations/{location}/reservations/{reservation}`.
+	// Forces the query to use on-demand billing when set to `none`. This requires
+	// the project or organization to have `reservation_override_mode` set to
+	// `ALLOW_ANY_OVERRIDE`.
 	Reservation string `json:"reservation,omitempty"`
+	// SecureContext: Optional. A set of key-value pairs representing the secure
+	// context. This can be used to pass sensitive or context-specific information.
+	// They can be retrieved via the SECURE_CONTEXT() function and used to modify
+	// the run-time behavior of a query.
+	SecureContext *SecureContext `json:"secureContext,omitempty"`
 	// TimeoutMs: Optional. Optional: Specifies the maximum amount of time, in
 	// milliseconds, that the client is willing to wait for the query to complete.
 	// By default, this limit is 10 seconds (10,000 milliseconds). If the query is
@@ -7441,15 +8209,15 @@ type QueryRequest struct {
 	// result table. This may incur a performance penalty. This option cannot be
 	// used with Legacy SQL. This feature is not yet available.
 	WriteIncrementalResults bool `json:"writeIncrementalResults,omitempty"`
-	// ForceSendFields is a list of field names (e.g. "ConnectionProperties") to
-	// unconditionally include in API requests. By default, fields with empty or
+	// ForceSendFields is a list of field names (e.g. "ArrowSerializationOptions")
+	// to unconditionally include in API requests. By default, fields with empty or
 	// default values are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
 	// details.
 	ForceSendFields []string `json:"-"`
-	// NullFields is a list of field names (e.g. "ConnectionProperties") to include
-	// in API requests with the JSON null value. By default, fields with empty
-	// values are omitted from API requests. See
+	// NullFields is a list of field names (e.g. "ArrowSerializationOptions") to
+	// include in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
 	NullFields []string `json:"-"`
 }
@@ -7460,6 +8228,11 @@ func (s QueryRequest) MarshalJSON() ([]byte, error) {
 }
 
 type QueryResponse struct {
+	// ArrowRecordBatch: Output only. Serialized row data in Arrow RecordBatch
+	// format.
+	ArrowRecordBatch *ArrowRecordBatch `json:"arrowRecordBatch,omitempty"`
+	// ArrowSchema: Output only. Arrow schema
+	ArrowSchema *ArrowSchema `json:"arrowSchema,omitempty"`
 	// CacheHit: Whether the query result was fetched from the query cache.
 	CacheHit bool `json:"cacheHit,omitempty"`
 	// CreationTime: Output only. Creation time of this query, in milliseconds
@@ -7503,6 +8276,10 @@ type QueryResponse struct {
 	// NumDmlAffectedRows: Output only. The number of rows affected by a DML
 	// statement. Present only for DML statements INSERT, UPDATE or DELETE.
 	NumDmlAffectedRows int64 `json:"numDmlAffectedRows,omitempty,string"`
+	// PageRowCount: Output only. The number of rows out of `total_rows` returned
+	// in this response. Preview
+	// (https://cloud.google.com/products/#product-launch-stages)
+	PageRowCount int64 `json:"pageRowCount,omitempty,string"`
 	// PageToken: A token used for paging results. A non-empty token indicates that
 	// additional results are available. To see additional results, query the
 	// `jobs.getQueryResults`
@@ -7526,6 +8303,171 @@ type QueryResponse struct {
 	// epoch. This field will be present when the query job transitions from the
 	// PENDING state to either RUNNING or DONE.
 	StartTime int64 `json:"startTime,omitempty,string"`
+	// StatementType: Output only. The type of query statement, if valid. Possible
+	// values: * `SELECT`: `SELECT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#select_list)
+	// statement. * `ASSERT`: `ASSERT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/debugging-statements#assert)
+	// statement. * `INSERT`: `INSERT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/dml-syntax#insert_statement)
+	// statement. * `UPDATE`: `UPDATE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/dml-syntax#update_statement)
+	// statement. * `DELETE`: `DELETE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-manipulation-language)
+	// statement. * `MERGE`: `MERGE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-manipulation-language)
+	// statement. * `TRUNCATE_TABLE`: `TRUNCATE TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/dml-syntax#truncate_table_statement)
+	// statement. * `CREATE_TABLE`: `CREATE TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_table_statement)
+	// statement, without `AS SELECT`. * `CREATE_TABLE_AS_SELECT`: `CREATE TABLE AS
+	// SELECT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_table_statement)
+	// statement. * `CREATE_VIEW`: `CREATE VIEW`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_view_statement)
+	// statement. * `CREATE_MODEL`: `CREATE MODEL`
+	// (https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-create#create_model_statement)
+	// statement. * `CREATE_MATERIALIZED_VIEW`: `CREATE MATERIALIZED VIEW`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_materialized_view_statement)
+	// statement. * `CREATE_FUNCTION`: `CREATE FUNCTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_function_statement)
+	// statement. * `CREATE_TABLE_FUNCTION`: `CREATE TABLE FUNCTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_table_function_statement)
+	// statement. * `CREATE_PROCEDURE`: `CREATE PROCEDURE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_procedure)
+	// statement. * `CREATE_ROW_ACCESS_POLICY`: `CREATE ROW ACCESS POLICY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_row_access_policy_statement)
+	// statement. * `CREATE_SCHEMA`: `CREATE SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_schema_statement)
+	// statement. * `CREATE_EXTERNAL_SCHEMA`: `CREATE EXTERNAL SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_external_schema_statement)
+	// statement. * `CREATE_EXTERNAL_TABLE`: `CREATE EXTERNAL TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_external_table_statement)
+	// statement. * `CREATE_SNAPSHOT_TABLE`: `CREATE SNAPSHOT TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_snapshot_table_statement)
+	// statement. * `CREATE_SEARCH_INDEX`: `CREATE SEARCH INDEX`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_search_index_statement)
+	// statement. * `CREATE_VECTOR_INDEX`: `CREATE VECTOR INDEX`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_vector_index_statement)
+	// statement. * `CREATE_CONNECTION`: `CREATE CONNECTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_connection_statement)
+	// statement. * `CREATE_DATA_POLICY`: `CREATE DATA_POLICY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_data_policy_statement)
+	// statement. * `CREATE_PROPERTY_GRAPH`: `CREATE PROPERTY GRAPH`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/graph-schema-statements#gql_create_graph)
+	// statement. * `CREATE_CAPACITY`: `CREATE CAPACITY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_capacity_statement)
+	// statement. * `CREATE_RESERVATION`: `CREATE RESERVATION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_reservation_statement)
+	// statement. * `CREATE_ASSIGNMENT`: `CREATE ASSIGNMENT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_assignment_statement)
+	// statement. * `DROP_TABLE`: `DROP TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_table_statement)
+	// statement. * `DROP_EXTERNAL_TABLE`: `DROP EXTERNAL TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_external_table_statement)
+	// statement. * `DROP_VIEW`: `DROP VIEW`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_view_statement)
+	// statement. * `DROP_MODEL`: `DROP MODEL`
+	// (https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-drop-model)
+	// statement. * `DROP_MATERIALIZED_VIEW`: `DROP MATERIALIZED VIEW`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_materialized_view_statement)
+	// statement. * `DROP_FUNCTION`: `DROP FUNCTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_function_statement)
+	// statement. * `DROP_TABLE_FUNCTION`: `DROP TABLE FUNCTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_table_function)
+	// statement. * `DROP_PROCEDURE`: `DROP PROCEDURE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_procedure_statement)
+	// statement. * `DROP_SEARCH_INDEX`: `DROP SEARCH INDEX`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_search_index)
+	// statement. * `DROP_VECTOR_INDEX`: `DROP VECTOR INDEX`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_vector_index)
+	// statement. * `DROP_SCHEMA`: `DROP SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_schema_statement)
+	// statement. * `UNDROP_SCHEMA`: `UNDROP SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#undrop_schema_statement)
+	// statement. * `DROP_SNAPSHOT_TABLE`: `DROP SNAPSHOT TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_snapshot_table_statement)
+	// statement. * `DROP_ROW_ACCESS_POLICY`: [`DROP ALL] ROW ACCESS
+	// POLICY|POLICIES`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_row_access_policy_statement)
+	// statement. * `DROP_CONNECTION`: `DROP CONNECTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_connection_statement)
+	// statement. * `DROP_DATA_POLICY`: `DROP DATA_POLICY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_data_policy)
+	// statement. * `DROP_PROPERTY_GRAPH`: `DROP PROPERTY GRAPH`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/graph-schema-statements#gql_drop_graph)
+	// statement. * `DROP_CAPACITY`: `DROP CAPACITY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_capacity_statement)
+	// statement. * `DROP_RESERVATION`: `DROP RESERVATION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_reservation_statement)
+	// statement. * `DROP_ASSIGNMENT`: `DROP ASSIGNMENT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#drop_assignment_statement)
+	// statement. * `ALTER_TABLE`: `ALTER TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_table_set_options_statement)
+	// statement. * `ALTER_VIEW`: `ALTER VIEW`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_view_set_options_statement)
+	// statement. * `ALTER_MATERIALIZED_VIEW`: `ALTER MATERIALIZED VIEW`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_materialized_view_set_options_statement)
+	// statement. * `ALTER_SCHEMA`: `ALTER SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_schema_set_options_statement)
+	// statement. * `ALTER_MODEL`: `ALTER MODEL`
+	// (https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-alter-model)
+	// statement. * `ALTER_SEARCH_INDEX`: `ALTER SEARCH INDEX`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_search_index_statement)
+	// statement. * `ALTER_VECTOR_INDEX`: `ALTER VECTOR INDEX`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_vector_index_rebuild_statement)
+	// statement. * `ALTER_CONNECTION`: `ALTER CONNECTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_connection_set_options_statement)
+	// statement. * `ALTER_DATA_POLICY`: `ALTER DATA_POLICY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_data_policy_statement)
+	// statement. * `ALTER_PROJECT`: `ALTER PROJECT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_project_set_options_statement)
+	// statement. * `ALTER_ORGANIZATION`: `ALTER ORGANIZATION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_organization_set_options_statement)
+	// statement. * `ALTER_BI_CAPACITY`: `ALTER BI_CAPACITY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_bi_capacity_set_options_statement)
+	// statement. * `ALTER_CAPACITY`: `ALTER CAPACITY`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_capacity_set_options_statement)
+	// statement. * `ALTER_RESERVATION`: `ALTER RESERVATION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_reservation_set_options_statement)
+	// statement. * `SCRIPT`: `SCRIPT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language)
+	// statement. * `CALL`: `CALL`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language#call)
+	// statement. * `BEGIN_TRANSACTION`: `BEGIN TRANSACTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language#begin_transaction)
+	// statement. * `COMMIT_TRANSACTION`: `COMMIT TRANSACTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language#commit_transaction)
+	// statement. * `ROLLBACK_TRANSACTION`: `ROLLBACK TRANSACTION`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language#rollback_transaction)
+	// statement. * `EXPORT_DATA`: `EXPORT DATA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/export-statements#export_data_statement)
+	// statement. * `EXPORT_MODEL`: `EXPORT MODEL`
+	// (https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-export-model)
+	// statement. * `EXPORT_METADATA`: `EXPORT TABLE METADATA`
+	// (https://cloud.google.com/bigquery/docs/biglake-iceberg-tables-in-bigquery)
+	// statement, for BigLake Iceberg tables. * `LOAD_DATA`: `LOAD DATA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/load-statements#load_data_statement)
+	// statement. * `GRANT_ON_SCHEMA`: `GRANT ... ON SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#grant_statement)
+	// statement. * `GRANT_ON_TABLE`: `GRANT ... ON TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#grant_statement)
+	// statement. Also used for `GRANT ... ON EXTERNAL TABLE`. * `GRANT_ON_VIEW`:
+	// `GRANT ... ON VIEW`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#grant_statement)
+	// statement. * `GRANT_ON_PROJECT`: `GRANT ... ON PROJECT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#grant_statement)
+	// statement. * `REVOKE_ON_SCHEMA`: `REVOKE ... ON SCHEMA`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#revoke_statement)
+	// statement. * `REVOKE_ON_TABLE`: `REVOKE ... ON TABLE`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#revoke_statement)
+	// statement. Also used for `REVOKE ... ON EXTERNAL TABLE`. * `REVOKE_ON_VIEW`:
+	// `REVOKE ... ON VIEW`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#revoke_statement)
+	// statement. * `REVOKE_ON_PROJECT`: `REVOKE ... ON PROJECT`
+	// (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-control-language#revoke_statement)
+	// statement.
+	StatementType string `json:"statementType,omitempty"`
 	// TotalBytesBilled: Output only. If the project is configured to use on-demand
 	// pricing, then this field contains the total bytes billed for the job. If the
 	// project is configured to use flat-rate pricing, then you are not billed for
@@ -7543,15 +8485,15 @@ type QueryResponse struct {
 
 	// ServerResponse contains the HTTP response code and headers from the server.
 	googleapi.ServerResponse `json:"-"`
-	// ForceSendFields is a list of field names (e.g. "CacheHit") to
+	// ForceSendFields is a list of field names (e.g. "ArrowRecordBatch") to
 	// unconditionally include in API requests. By default, fields with empty or
 	// default values are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
 	// details.
 	ForceSendFields []string `json:"-"`
-	// NullFields is a list of field names (e.g. "CacheHit") to include in API
-	// requests with the JSON null value. By default, fields with empty values are
-	// omitted from API requests. See
+	// NullFields is a list of field names (e.g. "ArrowRecordBatch") to include in
+	// API requests with the JSON null value. By default, fields with empty values
+	// are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
 	NullFields []string `json:"-"`
 }
@@ -7900,6 +8842,140 @@ func (s RemoteModelInfo) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
+// Replica: The replica metadata of the dataset. If the dataset has two or more
+// replicas, it's considered a cross region replicated (CRR) dataset.
+type Replica struct {
+	// BackfillCompletionTime: Output only. The time when the backfill was
+	// completed and replica is ready to use.
+	BackfillCompletionTime string `json:"backfillCompletionTime,omitempty"`
+	// CreationTime: Output only. The timestamp when the replica was created. For
+	// any dataset's first replica, this should be set to the dataset's
+	// creation_time.
+	CreationTime string `json:"creationTime,omitempty"`
+	// FailoverReservationUri: Output only. Failover reservation ID for the
+	// replica's region if this replica is used for DR. Fully-qualified format,
+	// e.g. "projects/some-project/locations/US/reservations/some-reservation" The
+	// location portion of the format is upper case if "US" or "EU", otherwise a
+	// lower case cloud region like "asia-northeast1".
+	FailoverReservationUri string `json:"failoverReservationUri,omitempty"`
+	// Id: Required. The user-visible string identifier for this dataset replica.
+	// This is generally named after the region.
+	Id string `json:"id,omitempty"`
+	// Location: Required. The logical bigquery region where this replica is
+	// located. This is upper case if "US" or "EU", otherwise a lower case cloud
+	// region like "asia-northeast1".
+	Location string `json:"location,omitempty"`
+	// PrimaryAssignmentCompletionTime: Output only. After a new primary assignment
+	// is made, this is the time that the dataset's data has been fully replicated
+	// to the replica, and after which the system will use current reads in the new
+	// primary replica.
+	PrimaryAssignmentCompletionTime string `json:"primaryAssignmentCompletionTime,omitempty"`
+	// PrimaryAssignmentTime: Output only. The time at which the replica was
+	// assigned primary. Only one replica will have this field populated at any
+	// point.
+	PrimaryAssignmentTime string `json:"primaryAssignmentTime,omitempty"`
+	// ReplicaOptions: Optional. Contains modify options on the replica such as set
+	// a kms key on the replica.
+	ReplicaOptions *ReplicaOptions `json:"replicaOptions,omitempty"`
+	// ReplicaState: Output only. Gives an explicit indicator of the replica
+	// primary state.
+	//
+	// Possible values:
+	//   "REPLICA_STATE_UNSPECIFIED" - Should never be set.
+	//   "PRIMARY" - Denotes that the replica is the primary. All routing by
+	// default goes to the primary and only the primary is writable.
+	//   "SECONDARY" - Denotes that the replica is the secondary and is only
+	// readable.
+	//   "ASSIGNED_PRIMARY" - This value for the replica where the new primary is
+	// going to be. At most one replica can have this value, and its only present
+	// when the dataset has a primary switch in progress.
+	//   "PREVIOUSLY_ASSIGNED_PRIMARY" - This value for the replica where the last
+	// primary was, but is no longer assigned the primary. All routing still goes
+	// to this replica, but it is no longer writable. Only set on the old primary
+	// during a primary switch. At most one replica at any moment can have this
+	// value.
+	//   "BACKFILLING" - The replica is not queriable yet since it's still
+	// backfilling.
+	ReplicaState string `json:"replicaState,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "BackfillCompletionTime") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "BackfillCompletionTime") to
+	// include in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s Replica) MarshalJSON() ([]byte, error) {
+	type NoMethod Replica
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// ReplicaOptions: Options set by the user when creating the replica. These
+// include region-specific dataset values, for example default KMS key name.
+// When a resource is replicated, the destination region's replica contains
+// values that should be overwritten in the destination region.
+type ReplicaOptions struct {
+	// DefaultKmsKeyName: Optional. Default KMS encryption key name.
+	DefaultKmsKeyName string `json:"defaultKmsKeyName,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "DefaultKmsKeyName") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "DefaultKmsKeyName") to include in
+	// API requests with the JSON null value. By default, fields with empty values
+	// are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s ReplicaOptions) MarshalJSON() ([]byte, error) {
+	type NoMethod ReplicaOptions
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// ResourcePolicyMember: Output-only policy member strings of a Google Cloud
+// resource's built-in identity.
+type ResourcePolicyMember struct {
+	// IamPolicyNamePrincipal: Output only. IAM policy binding member referring to
+	// a Google Cloud resource by user-assigned name (https://google.aip.dev/122).
+	// If a resource is deleted and recreated with the same name, the binding will
+	// be applicable to the new resource. Example:
+	// `principal://parametermanager.googleapis.com/projects/12345/name/locations/us
+	// -central1-a/parameters/my-parameter`
+	IamPolicyNamePrincipal string `json:"iamPolicyNamePrincipal,omitempty"`
+	// IamPolicyUidPrincipal: Output only. IAM policy binding member referring to a
+	// Google Cloud resource by system-assigned unique identifier
+	// (https://google.aip.dev/148#uid). If a resource is deleted and recreated
+	// with the same name, the binding will not be applicable to the new resource
+	// Example:
+	// `principal://parametermanager.googleapis.com/projects/12345/uid/locations/us-
+	// central1-a/parameters/a918fed5`
+	IamPolicyUidPrincipal string `json:"iamPolicyUidPrincipal,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "IamPolicyNamePrincipal") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "IamPolicyNamePrincipal") to
+	// include in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s ResourcePolicyMember) MarshalJSON() ([]byte, error) {
+	type NoMethod ResourcePolicyMember
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
 type RestrictionConfig struct {
 	// Type: Output only. Specifies the type of dataset/table restriction.
 	//
@@ -7931,6 +9007,10 @@ func (s RestrictionConfig) MarshalJSON() ([]byte, error) {
 type Routine struct {
 	// Arguments: Optional.
 	Arguments []*Argument `json:"arguments,omitempty"`
+	// BuildStatus: Output only. The build status of the routine. This field is
+	// only applicable to Python UDFs. Preview
+	// (https://cloud.google.com/products/#product-launch-stages)
+	BuildStatus *RoutineBuildStatus `json:"buildStatus,omitempty"`
 	// CreationTime: Output only. The time when this routine was created, in
 	// milliseconds since the epoch.
 	CreationTime int64 `json:"creationTime,omitempty,string"`
@@ -8073,6 +9153,49 @@ type Routine struct {
 
 func (s Routine) MarshalJSON() ([]byte, error) {
 	type NoMethod Routine
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// RoutineBuildStatus: The status of a routine build.
+type RoutineBuildStatus struct {
+	// BuildDuration: Output only. The time taken for the image build. Populated
+	// only after the build succeeds or fails.
+	BuildDuration string `json:"buildDuration,omitempty"`
+	// BuildState: Output only. The current build state of the routine.
+	//
+	// Possible values:
+	//   "BUILD_STATE_UNSPECIFIED" - Default value.
+	//   "IN_PROGRESS" - The build is in progress.
+	//   "SUCCEEDED" - The build has succeeded.
+	//   "FAILED" - The build has failed.
+	BuildState string `json:"buildState,omitempty"`
+	// BuildStateUpdateTime: Output only. The time when the build state was updated
+	// last.
+	BuildStateUpdateTime string `json:"buildStateUpdateTime,omitempty"`
+	// ErrorResult: Output only. A result object that will be present only if the
+	// build has failed.
+	ErrorResult *ErrorProto `json:"errorResult,omitempty"`
+	// ImageSizeBytes: Output only. The size of the image in bytes. Populated only
+	// after the build succeeds.
+	ImageSizeBytes int64 `json:"imageSizeBytes,omitempty,string"`
+	// InstalledPackages: Output only. The list of installed packages in the
+	// routine's execution environment. Populated only after the build succeeds.
+	InstalledPackages []*InstalledPackage `json:"installedPackages,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "BuildDuration") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "BuildDuration") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s RoutineBuildStatus) MarshalJSON() ([]byte, error) {
+	type NoMethod RoutineBuildStatus
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
@@ -8355,6 +9478,32 @@ func (s ScriptStatistics) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
+// SearchIndexingStats: Statistics for a search indexing job. Populated as part
+// of JobStatistics2.
+type SearchIndexingStats struct {
+	// BaseTable: Output only. The base table for which the search index is being
+	// created or refreshed.
+	BaseTable *TableReference `json:"baseTable,omitempty"`
+	// IndexName: Output only. The name of the search index.
+	IndexName string `json:"indexName,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "BaseTable") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "BaseTable") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s SearchIndexingStats) MarshalJSON() ([]byte, error) {
+	type NoMethod SearchIndexingStats
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
 // SearchStatistics: Statistics for a search query. Populated as part of
 // JobStatistics2.
 type SearchStatistics struct {
@@ -8396,6 +9545,30 @@ type SearchStatistics struct {
 
 func (s SearchStatistics) MarshalJSON() ([]byte, error) {
 	type NoMethod SearchStatistics
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// SecureContext: A set of key-value pairs representing the secure context.
+type SecureContext struct {
+	// SecureParameterEntries: Optional. A set of key-value pairs representing the
+	// secure parameter values. They can be retrieved via the SECURE_CONTEXT()
+	// function and used to modify the run-time behavior of a query.
+	SecureParameterEntries googleapi.RawMessage `json:"secureParameterEntries,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "SecureParameterEntries") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "SecureParameterEntries") to
+	// include in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s SecureContext) MarshalJSON() ([]byte, error) {
+	type NoMethod SecureContext
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
@@ -8482,17 +9655,26 @@ func (s SetIamPolicyRequest) MarshalJSON() ([]byte, error) {
 
 // SkewSource: Details about source stages which produce skewed data.
 type SkewSource struct {
+	// OutputBytesMax: Output only. Max partition output size (in bytes) for this
+	// stage.
+	OutputBytesMax int64 `json:"outputBytesMax,omitempty,string"`
+	// OutputBytesMedian: Output only. Median partition output size (in bytes) for
+	// this stage.
+	OutputBytesMedian int64 `json:"outputBytesMedian,omitempty,string"`
+	// OutputBytesP95: Output only. 95-th percentile of partition output size (in
+	// bytes) for this stage.
+	OutputBytesP95 int64 `json:"outputBytesP95,omitempty,string"`
 	// StageId: Output only. Stage id of the skew source stage.
 	StageId int64 `json:"stageId,omitempty,string"`
-	// ForceSendFields is a list of field names (e.g. "StageId") to unconditionally
-	// include in API requests. By default, fields with empty or default values are
-	// omitted from API requests. See
+	// ForceSendFields is a list of field names (e.g. "OutputBytesMax") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
 	// details.
 	ForceSendFields []string `json:"-"`
-	// NullFields is a list of field names (e.g. "StageId") to include in API
-	// requests with the JSON null value. By default, fields with empty values are
-	// omitted from API requests. See
+	// NullFields is a list of field names (e.g. "OutputBytesMax") to include in
+	// API requests with the JSON null value. By default, fields with empty values
+	// are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
 	NullFields []string `json:"-"`
 }
@@ -8771,6 +9953,7 @@ type StandardSqlDataType struct {
 	// is used because a JSON object cannot have duplicate field names.
 	//   "RANGE" - Encoded as a pair with types matching range_element_type. Pairs
 	// must begin with "[", end with ")", and be separated by ", ".
+	//   "UUID" - Encoded as a string.
 	TypeKind string `json:"typeKind,omitempty"`
 	// ForceSendFields is a list of field names (e.g. "ArrayElementType") to
 	// unconditionally include in API requests. By default, fields with empty or
@@ -9190,6 +10373,10 @@ type Table struct {
 	// populated for metastore partitioned tables. For other table formats, this is
 	// an output only field.
 	PartitionDefinition *PartitioningDefinition `json:"partitionDefinition,omitempty"`
+	// PolicyMember: Output only. Contains the resource identity token of the view
+	// that users can use to include in their policy bindings for authorization.
+	// This should be set only for views.
+	PolicyMember *ResourcePolicyMember `json:"policyMember,omitempty"`
 	// RangePartitioning: If specified, configures range partitioning for this
 	// table.
 	RangePartitioning *RangePartitioning `json:"rangePartitioning,omitempty"`
@@ -9284,6 +10471,40 @@ type TableCell struct {
 
 func (s TableCell) MarshalJSON() ([]byte, error) {
 	type NoMethod TableCell
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// TableChangeInsight: Table-level performance insights compared to previous
+// runs. These insights don't apply to specific query stages, rather they apply
+// to the whole table.
+type TableChangeInsight struct {
+	// MetadataCacheNotUsedButUsedPreviously: Output only. True if the table's
+	// column metadata index was not used in the current job, but was used in a
+	// previous job with the same query hash.
+	MetadataCacheNotUsedButUsedPreviously bool `json:"metadataCacheNotUsedButUsedPreviously,omitempty"`
+	// MetadataCacheStalenessInsight: Output only. If present, indicates that the
+	// table's metadata column index staleness has increased significantly compared
+	// to previous jobs with the same query hash.
+	MetadataCacheStalenessInsight *MetadataCacheStalenessInsight `json:"metadataCacheStalenessInsight,omitempty"`
+	// TableReference: Output only. The table that was queried.
+	TableReference *TableReference `json:"tableReference,omitempty"`
+	// ForceSendFields is a list of field names (e.g.
+	// "MetadataCacheNotUsedButUsedPreviously") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted from
+	// API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g.
+	// "MetadataCacheNotUsedButUsedPreviously") to include in API requests with the
+	// JSON null value. By default, fields with empty values are omitted from API
+	// requests. See https://pkg.go.dev/google.golang.org/api#hdr-NullFields for
+	// more details.
+	NullFields []string `json:"-"`
+}
+
+func (s TableChangeInsight) MarshalJSON() ([]byte, error) {
+	type NoMethod TableChangeInsight
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
@@ -9579,9 +10800,26 @@ type TableFieldSchema struct {
 	// locale, case insensitive. * '': empty string. Default to case-sensitive
 	// behavior.
 	Collation string `json:"collation,omitempty"`
+	// DataGovernanceTagsInfo: Optional. Specifies the data governance tags on this
+	// field. This field works with other column-level security fields as follows:
+	// * **Precedence**: If a data governance tag is attached to a column, it takes
+	// precedence over the policy tag attached to the column. However, if a data
+	// policy is attached to a column, it takes precedence over the data governance
+	// tag. * **Patching behavior**: Describes how this field behaves during a
+	// `Table.patch` schema update: * **Unset**: If the `data_governance_tags_info`
+	// field is omitted from the update request, the existing tags on the column
+	// are preserved. * **Empty Field**: To clear data governance tags from a
+	// column, send the `data_governance_tags_info` field as an empty object. This
+	// removes all tags from the column. * **Updating tags**: To replace an
+	// existing tag, send the field with the new tag.
+	DataGovernanceTagsInfo *TableFieldSchemaDataGovernanceTagsInfo `json:"dataGovernanceTagsInfo,omitempty"`
 	// DataPolicies: Optional. Data policies attached to this field, used for
 	// field-level access control.
 	DataPolicies []*DataPolicyOption `json:"dataPolicies,omitempty"`
+	// DataPolicyList: Optional. Specifies data policies attached to this field,
+	// used for field-level access control. When set, this will be the source of
+	// truth for data policy information.
+	DataPolicyList *DataPolicyList `json:"dataPolicyList,omitempty"`
 	// DefaultValueExpression: Optional. A SQL expression to specify the [default
 	// value] (https://cloud.google.com/bigquery/docs/default-values) for this
 	// field.
@@ -9596,6 +10834,9 @@ type TableFieldSchema struct {
 	// valid for top-level schema fields (not nested fields). If the type is
 	// FOREIGN, this field is required.
 	ForeignTypeDefinition string `json:"foreignTypeDefinition,omitempty"`
+	// GeneratedColumn: Optional. Definition of how values are generated for the
+	// field. Only valid for top-level schema fields (not nested fields).
+	GeneratedColumn *GeneratedColumn `json:"generatedColumn,omitempty"`
 	// MaxLength: Optional. Maximum length of values of this field for STRINGS or
 	// BYTES. If max_length is not specified, no maximum length constraint is
 	// imposed on this field. If type = "STRING", then max_length represents the
@@ -9700,6 +10941,49 @@ type TableFieldSchemaCategories struct {
 
 func (s TableFieldSchemaCategories) MarshalJSON() ([]byte, error) {
 	type NoMethod TableFieldSchemaCategories
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+// TableFieldSchemaDataGovernanceTagsInfo: Optional. Specifies the data
+// governance tags on this field. This field works with other column-level
+// security fields as follows: * **Precedence**: If a data governance tag is
+// attached to a column, it takes precedence over the policy tag attached to
+// the column. However, if a data policy is attached to a column, it takes
+// precedence over the data governance tag. * **Patching behavior**: Describes
+// how this field behaves during a `Table.patch` schema update: * **Unset**: If
+// the `data_governance_tags_info` field is omitted from the update request,
+// the existing tags on the column are preserved. * **Empty Field**: To clear
+// data governance tags from a column, send the `data_governance_tags_info`
+// field as an empty object. This removes all tags from the column. *
+// **Updating tags**: To replace an existing tag, send the field with the new
+// tag.
+type TableFieldSchemaDataGovernanceTagsInfo struct {
+	// DataGovernanceTags: Optional. The data governance tags added to this field
+	// are used for field-level access control. Only one data governance tag is
+	// currently supported on a field. Tag keys are globally unique. Tag key is
+	// expected to be in the namespaced format, for example "parent-id/pii" where
+	// parent-id is the ID of the parent organization or project resource for this
+	// tag key. Tag value is expected to be the short name, for example
+	// "sensitive". See Tag definitions
+	// (https://cloud.google.com/iam/docs/tags-access-control#definitions) for more
+	// details. For example: "parent-id/pii": "sensitive", "myProject/cost_center":
+	// "sales"
+	DataGovernanceTags map[string]string `json:"dataGovernanceTags,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "DataGovernanceTags") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "DataGovernanceTags") to include
+	// in API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s TableFieldSchemaDataGovernanceTagsInfo) MarshalJSON() ([]byte, error) {
+	type NoMethod TableFieldSchemaDataGovernanceTagsInfo
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
@@ -9961,7 +11245,7 @@ type TableReplicationInfo struct {
 	//   "ACTIVE" - Replication is Active with no errors.
 	//   "SOURCE_DELETED" - Source object is deleted.
 	//   "PERMISSION_DENIED" - Source revoked replication permissions.
-	//   "UNSUPPORTED_CONFIGURATION" - Source configuration doesn’t allow
+	//   "UNSUPPORTED_CONFIGURATION" - Source configuration doesn't allow
 	// replication.
 	ReplicationStatus string `json:"replicationStatus,omitempty"`
 	// SourceTable: Required. Source table reference that is replicated.
@@ -10935,6 +12219,32 @@ func (s UserDefinedFunctionResource) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
+// VectorSearchIndexingStats: Statistics for a vector search indexing job.
+// Populated as part of JobStatistics2.
+type VectorSearchIndexingStats struct {
+	// BaseTable: Output only. The base table for which the vector index is being
+	// created or refreshed.
+	BaseTable *TableReference `json:"baseTable,omitempty"`
+	// IndexName: Output only. The name of the vector index.
+	IndexName string `json:"indexName,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "BaseTable") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "BaseTable") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s VectorSearchIndexingStats) MarshalJSON() ([]byte, error) {
+	type NoMethod VectorSearchIndexingStats
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
 // VectorSearchStatistics: Statistics for a vector search query. Populated as
 // part of JobStatistics2.
 type VectorSearchStatistics struct {
@@ -11029,7 +12339,8 @@ type DatasetsDeleteCall struct {
 // Delete: Deletes the dataset specified by the datasetId value. Before you can
 // delete a dataset, you must delete all its tables, either manually or by
 // specifying deleteContents. Immediately after deletion, you can create
-// another dataset with the same name.
+// another dataset with the same name. # IAM Permissions Requires the
+// `bigquery.datasets.delete` permission on the dataset.
 //
 // - datasetId: Dataset ID of dataset being deleted.
 // - projectId: Project ID of the dataset being deleted.
@@ -11115,7 +12426,8 @@ type DatasetsGetCall struct {
 	header_      http.Header
 }
 
-// Get: Returns the dataset specified by datasetID.
+// Get: Returns the dataset specified by datasetID. # IAM Permissions Requires
+// the `bigquery.datasets.get` permission on the dataset.
 //
 // - datasetId: Dataset ID of the requested dataset.
 // - projectId: Project ID of the requested dataset.
@@ -11161,6 +12473,11 @@ func (c *DatasetsGetCall) AccessPolicyVersion(accessPolicyVersion int64) *Datase
 // for one or more entities.
 //
 //	"FULL" - View both dataset metadata and ACL information.
+//	"BASIC" - View both dataset metadata and ACL information.
+//	"BASIC_REPLICA_METADATA_VIEW" - Includes everything from the BASIC view
+//
+// plus replication information. However, it will not include sync_status or
+// other fields requiring cross-region requests.
 func (c *DatasetsGetCall) DatasetView(datasetView string) *DatasetsGetCall {
 	c.urlParams_.Set("datasetView", datasetView)
 	return c
@@ -11267,7 +12584,8 @@ type DatasetsInsertCall struct {
 	header_    http.Header
 }
 
-// Insert: Creates a new empty dataset.
+// Insert: Creates a new empty dataset. # IAM Permissions Requires the
+// `bigquery.datasets.create` permission on the project.
 //
 // - projectId: Project ID of the new dataset.
 func (r *DatasetsService) Insert(projectId string, dataset *Dataset) *DatasetsInsertCall {
@@ -11388,7 +12706,9 @@ type DatasetsListCall struct {
 }
 
 // List: Lists all datasets in the specified project to which the user has been
-// granted the READER dataset role.
+// granted the READER dataset role. # IAM Permissions Requires no specific IAM
+// permission(s) to use this method. Results are filtered to only include
+// datasets on which the caller has the `bigquery.datasets.get` permission.
 //
 // - projectId: Project ID of the datasets to be listed.
 func (r *DatasetsService) List(projectId string) *DatasetsListCall {
@@ -11556,7 +12876,9 @@ type DatasetsPatchCall struct {
 // Patch: Updates information in an existing dataset. The update method
 // replaces the entire dataset resource, whereas the patch method only replaces
 // fields that are provided in the submitted dataset resource. This method
-// supports RFC5789 patch semantics.
+// supports RFC5789 patch semantics. # IAM Permissions Requires the following
+// IAM permission(s) to use this method: - `bigquery.datasets.update` on the
+// dataset. - `bigquery.datasets.get` on the dataset.
 //
 // - datasetId: Dataset ID of the dataset being updated.
 // - projectId: Project ID of the dataset being updated.
@@ -11706,7 +13028,10 @@ type DatasetsUndeleteCall struct {
 
 // Undelete: Undeletes a dataset which is within time travel window based on
 // datasetId. If a time is specified, the dataset version deleted at that time
-// is undeleted, else the last live version is undeleted.
+// is undeleted, else the last live version is undeleted. # IAM Permissions
+// Requires the following IAM permission(s) to use this method: -
+// `bigquery.datasets.create` on the project. - `bigquery.datasets.get` on the
+// dataset.
 //
 // - datasetId: Dataset ID of dataset being deleted.
 // - projectId: Project ID of the dataset to be undeleted.
@@ -11815,7 +13140,9 @@ type DatasetsUpdateCall struct {
 
 // Update: Updates information in an existing dataset. The update method
 // replaces the entire dataset resource, whereas the patch method only replaces
-// fields that are provided in the submitted dataset resource.
+// fields that are provided in the submitted dataset resource. # IAM
+// Permissions Requires the `bigquery.datasets.update` permission on the
+// dataset.
 //
 // - datasetId: Dataset ID of the dataset being updated.
 // - projectId: Project ID of the dataset being updated.
@@ -11964,7 +13291,10 @@ type JobsCancelCall struct {
 
 // Cancel: Requests that a job be cancelled. This call will return immediately,
 // and the client will need to poll for the job status to see if the cancel
-// completed successfully. Cancelled jobs may still incur costs.
+// completed successfully. Cancelled jobs may still incur costs. # IAM
+// Permissions Requires the `bigquery.jobs.update` permission on the job
+// resource. If the user matches the creator of the job, the
+// `bigquery.jobs.create` permission on the project is required instead.
 //
 // - jobId: Job ID of the job to cancel.
 // - projectId: Project ID of the job to cancel.
@@ -12078,7 +13408,8 @@ type JobsDeleteCall struct {
 }
 
 // Delete: Requests the deletion of the metadata of a job. This call returns
-// when the job's metadata is deleted.
+// when the job's metadata is deleted. # IAM Permissions Requires the
+// `bigquery.jobs.delete` permission on the job resource.
 //
 //   - jobId: Job ID of the job for which metadata is to be deleted. If this is a
 //     parent job which has child jobs, the metadata from all child jobs will be
@@ -12169,7 +13500,10 @@ type JobsGetCall struct {
 
 // Get: Returns information about a specific job. Job information is available
 // for a six month period after creation. Requires that you're the person who
-// ran the job, or have the Is Owner project role.
+// ran the job, or have the Is Owner project role. # IAM Permissions Requires
+// the `bigquery.jobs.get` permission on the job resource. If the user matches
+// the creator of the job, the `bigquery.jobs.create` permission on the project
+// is required instead.
 //
 // - jobId: Job ID of the requested job.
 // - projectId: Project ID of the requested job.
@@ -12293,7 +13627,12 @@ type JobsGetQueryResultsCall struct {
 	header_      http.Header
 }
 
-// GetQueryResults: RPC to get the results of a query job.
+// GetQueryResults: RPC to get the results of a query job. # IAM Permissions
+// Requires the following IAM permission(s) to use this method: -
+// `bigquery.jobs.get` on the job. - `bigquery.tables.getData` on the
+// destination table. If the user matches the creator of the job, the following
+// IAM permission(s) are required instead: - `bigquery.jobs.create` on the
+// project. - `bigquery.tables.getData` on the destination table.
 //
 // - jobId: Job ID of the query job.
 // - projectId: Project ID of the query job.
@@ -12511,7 +13850,14 @@ type JobsInsertCall struct {
 // configuration directly. * The *Upload* URI is ONLY for the case when you're
 // sending both a load job configuration and a data stream together. In this
 // case, the Upload URI accepts the job configuration and the data as two
-// distinct multipart MIME parts.
+// distinct multipart MIME parts. # IAM Permissions Requires the
+// `bigquery.jobs.create` permission on the project resource. Additional
+// permissions are required depending on the job type: - **Load, Export, and
+// Copy jobs**: Generally require data-level permissions such as
+// `bigquery.tables.export` or access to external storage. - **Query jobs**:
+// Permissions are dependent on the SQL statement. Complex queries (DDL, DCL)
+// may require additional permissions to create reservations, modify IAM
+// policies, or update project settings.
 //
 // - projectId: Project ID of project that will be billed for the job.
 func (r *JobsService) Insert(projectId string, job *Job) *JobsInsertCall {
@@ -12680,7 +14026,12 @@ type JobsListCall struct {
 // information is available for a six month period after creation. The job list
 // is sorted in reverse chronological order, by job creation time. Requires the
 // Can View project role, or the Is Owner project role if you set the allUsers
-// property.
+// property. # IAM Permissions Requires no specific IAM permission(s) to use
+// this method. Users are able to list the jobs they created. Additional access
+// is granted based on the following permissions: - Users with the
+// `bigquery.jobs.listAll` permission can list all jobs with all metadata. -
+// Users with the `bigquery.jobs.list` permission can list all jobs, but with
+// redacted information for jobs they did not create.
 //
 // - projectId: Project ID of the jobs to list.
 func (r *JobsService) List(projectId string) *JobsListCall {
@@ -12880,7 +14231,12 @@ type JobsQueryCall struct {
 }
 
 // Query: Runs a BigQuery SQL query synchronously and returns query results if
-// the query completes within a specified timeout.
+// the query completes within a specified timeout. # IAM Permissions Requires
+// the `bigquery.jobs.create` permission on the project resource. Data-level
+// permissions are highly dependent on the SQL statement being executed. While
+// standard queries require data access (such as `bigquery.tables.getData`),
+// complex operations like DDL or DCL may require permissions to manage
+// reservations, IAM policies, or project settings.
 //
 // - projectId: Project ID of the query request.
 func (r *JobsService) Query(projectId string, queryrequest *QueryRequest) *JobsQueryCall {
@@ -12984,7 +14340,8 @@ type ModelsDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes the model specified by modelId from the dataset.
+// Delete: Deletes the model specified by modelId from the dataset. # IAM
+// Permissions Requires the `bigquery.models.delete` permission on the model.
 //
 // - datasetId: Dataset ID of the model to delete.
 // - modelId: Model ID of the model to delete.
@@ -13066,7 +14423,8 @@ type ModelsGetCall struct {
 	header_      http.Header
 }
 
-// Get: Gets the specified model resource by model ID.
+// Get: Gets the specified model resource by model ID. # IAM Permissions
+// Requires the `bigquery.models.getMetadata` permission on the model.
 //
 // - datasetId: Dataset ID of the requested model.
 // - modelId: Model ID of the requested model.
@@ -13184,7 +14542,8 @@ type ModelsListCall struct {
 
 // List: Lists all models in the specified dataset. Requires the READER dataset
 // role. After retrieving the list of models, you can get information about a
-// particular model by calling the models.get method.
+// particular model by calling the models.get method. # IAM Permissions
+// Requires the `bigquery.models.list` permission on the dataset.
 //
 // - datasetId: Dataset ID of the models to list.
 // - projectId: Project ID of the models to list.
@@ -13335,7 +14694,8 @@ type ModelsPatchCall struct {
 	header_    http.Header
 }
 
-// Patch: Patch specific fields in the specified model.
+// Patch: Patch specific fields in the specified model. # IAM Permissions
+// Requires the `bigquery.models.updateMetadata` permission on the model.
 //
 // - datasetId: Dataset ID of the model to patch.
 // - modelId: Model ID of the model to patch.
@@ -13445,7 +14805,10 @@ type ProjectsGetServiceAccountCall struct {
 }
 
 // GetServiceAccount: RPC to get the service account for a project used for
-// interactions with Google Cloud KMS
+// interactions with Google Cloud KMS. Requires the `bigquery.jobs.create`
+// permission on the project resource. This permission is required to authorize
+// the retrieval of the project's service identity for technical management
+// tasks like encryption configuration.
 //
 // - projectId: ID of the project.
 func (r *ProjectsService) GetServiceAccount(projectId string) *ProjectsGetServiceAccountCall {
@@ -13557,7 +14920,11 @@ type ProjectsListCall struct {
 // List: RPC to list projects to which the user has been granted any project
 // role. Users of this method are encouraged to consider the Resource Manager
 // (https://cloud.google.com/resource-manager/docs/) API, which provides the
-// underlying data for this method and has more capabilities.
+// underlying data for this method and has more capabilities. # IAM Permissions
+// Requires no specific IAM permission(s) to use this method. The results are
+// filtered to only include projects on which the caller has been granted a
+// project-level role such as a BigQuery predefined IAM role or a basic role
+// such as Viewer or Owner.
 func (r *ProjectsService) List() *ProjectsListCall {
 	c := &ProjectsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	return c
@@ -13699,7 +15066,9 @@ type RoutinesDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes the routine specified by routineId from the dataset.
+// Delete: Deletes the routine specified by routineId from the dataset. # IAM
+// Permissions Requires the `bigquery.routines.delete` permission on the
+// routine.
 //
 // - datasetId: Dataset ID of the routine to delete.
 // - projectId: Project ID of the routine to delete.
@@ -13781,7 +15150,8 @@ type RoutinesGetCall struct {
 	header_      http.Header
 }
 
-// Get: Gets the specified routine resource by routine ID.
+// Get: Gets the specified routine resource by routine ID. # IAM Permissions
+// Requires the `bigquery.routines.get` permission on the routine.
 //
 // - datasetId: Dataset ID of the requested routine.
 // - projectId: Project ID of the requested routine.
@@ -14011,7 +15381,8 @@ type RoutinesInsertCall struct {
 	header_    http.Header
 }
 
-// Insert: Creates a new routine in the dataset.
+// Insert: Creates a new routine in the dataset. # IAM Permissions Requires the
+// `bigquery.routines.create` permission on the dataset.
 //
 // - datasetId: Dataset ID of the new routine.
 // - projectId: Project ID of the new routine.
@@ -14119,7 +15490,8 @@ type RoutinesListCall struct {
 }
 
 // List: Lists all routines in the specified dataset. Requires the READER
-// dataset role.
+// dataset role. # IAM Permissions Requires the `bigquery.routines.list`
+// permission on the dataset.
 //
 // - datasetId: Dataset ID of the routines to list.
 // - projectId: Project ID of the routines to list.
@@ -14508,7 +15880,8 @@ type RoutinesUpdateCall struct {
 }
 
 // Update: Updates information in an existing routine. The update method
-// replaces the entire Routine resource.
+// replaces the entire Routine resource. # IAM Permissions Requires the
+// `bigquery.routines.update` permission on the routine.
 //
 // - datasetId: Dataset ID of the routine to update.
 // - projectId: Project ID of the routine to update.
@@ -14619,7 +15992,10 @@ type RowAccessPoliciesBatchDeleteCall struct {
 	header_                             http.Header
 }
 
-// BatchDelete: Deletes provided row access policies.
+// BatchDelete: Deletes provided row access policies. # IAM Permissions
+// Requires the following IAM permission(s) on the table: -
+// `bigquery.rowAccessPolicies.delete` -
+// `bigquery.rowAccessPolicies.setIamPolicy`
 //
 // - datasetId: Dataset ID of the table to delete the row access policies.
 // - projectId: Project ID of the table to delete the row access policies.
@@ -14706,7 +16082,10 @@ type RowAccessPoliciesDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes a row access policy.
+// Delete: Deletes a row access policy. # IAM Permissions Requires the
+// following IAM permission(s) on the table: -
+// `bigquery.rowAccessPolicies.delete` -
+// `bigquery.rowAccessPolicies.setIamPolicy`
 //
 // - datasetId: Dataset ID of the table to delete the row access policy.
 // - policyId: Policy ID of the row access policy.
@@ -14800,7 +16179,8 @@ type RowAccessPoliciesGetCall struct {
 	header_      http.Header
 }
 
-// Get: Gets the specified row access policy by policy ID.
+// Get: Gets the specified row access policy by policy ID. # IAM Permissions
+// Requires the `bigquery.rowAccessPolicies.get` permission on the table.
 //
 // - datasetId: Dataset ID of the table to get the row access policy.
 // - policyId: Policy ID of the row access policy.
@@ -15027,7 +16407,10 @@ type RowAccessPoliciesInsertCall struct {
 	header_         http.Header
 }
 
-// Insert: Creates a row access policy.
+// Insert: Creates a row access policy. # IAM Permissions Requires the
+// following IAM permission(s) on the table: -
+// `bigquery.rowAccessPolicies.create` -
+// `bigquery.rowAccessPolicies.setIamPolicy` - `bigquery.tables.getData`
 //
 // - datasetId: Dataset ID of the table to get the row access policy.
 // - projectId: Project ID of the table to get the row access policy.
@@ -15139,7 +16522,9 @@ type RowAccessPoliciesListCall struct {
 	header_      http.Header
 }
 
-// List: Lists all row access policies on the specified table.
+// List: Lists all row access policies on the specified table. # IAM
+// Permissions Requires the `bigquery.rowAccessPolicies.list` permission on the
+// table.
 //
 // - datasetId: Dataset ID of row access policies to list.
 // - projectId: Project ID of the row access policies to list.
@@ -15405,7 +16790,10 @@ type RowAccessPoliciesUpdateCall struct {
 	header_         http.Header
 }
 
-// Update: Updates a row access policy.
+// Update: Updates a row access policy. # IAM Permissions Requires the
+// following IAM permission(s) on the table: -
+// `bigquery.rowAccessPolicies.update` -
+// `bigquery.rowAccessPolicies.setIamPolicy` - `bigquery.tables.getData`
 //
 // - datasetId: Dataset ID of the table to get the row access policy.
 // - policyId: Policy ID of the row access policy.
@@ -15521,7 +16909,10 @@ type TabledataInsertAllCall struct {
 }
 
 // InsertAll: Streams data into BigQuery one record at a time without needing
-// to run a load job.
+// to run a load job. # IAM Permissions Requires the following IAM
+// permission(s) to use this method: - `bigquery.tables.updateData` on the
+// table. - `bigquery.tables.get` on the table. - `bigquery.datasets.get` on
+// the dataset.
 //
 // - datasetId: Dataset ID of the destination.
 // - projectId: Project ID of the destination.
@@ -15633,7 +17024,8 @@ type TabledataListCall struct {
 	header_      http.Header
 }
 
-// List: List the content of a table in rows.
+// List: List the content of a table in rows. # IAM Permissions Requires the
+// `bigquery.tables.getData` permission on the table.
 //
 // - datasetId: Dataset id of the table to list.
 // - projectId: Project id of the table to list.
@@ -15829,7 +17221,8 @@ type TablesDeleteCall struct {
 }
 
 // Delete: Deletes the table specified by tableId from the dataset. If the
-// table contains data, all the data will be deleted.
+// table contains data, all the data will be deleted. # IAM Permissions
+// Requires the `bigquery.tables.delete` permission on the table.
 //
 // - datasetId: Dataset ID of the table to delete.
 // - projectId: Project ID of the table to delete.
@@ -15913,7 +17306,8 @@ type TablesGetCall struct {
 
 // Get: Gets the specified table resource by table ID. This method does not
 // return the data in the table, it only returns the table resource, which
-// describes the structure of this table.
+// describes the structure of this table. # IAM Permissions Requires the
+// `bigquery.tables.get` permission on the table.
 //
 // - datasetId: Dataset ID of the requested table.
 // - projectId: Project ID of the requested table.
@@ -16176,7 +17570,8 @@ type TablesInsertCall struct {
 	header_    http.Header
 }
 
-// Insert: Creates a new, empty table in the dataset.
+// Insert: Creates a new, empty table in the dataset. # IAM Permissions
+// Requires the `bigquery.tables.create` permission on the dataset.
 //
 // - datasetId: Dataset ID of the new table.
 // - projectId: Project ID of the new table.
@@ -16284,7 +17679,8 @@ type TablesListCall struct {
 }
 
 // List: Lists all tables in the specified dataset. Requires the READER dataset
-// role.
+// role. # IAM Permissions Requires the `bigquery.tables.list` permission on
+// the dataset.
 //
 // - datasetId: Dataset ID of the tables to list.
 // - projectId: Project ID of the tables to list.
@@ -16437,7 +17833,9 @@ type TablesPatchCall struct {
 // Patch: Updates information in an existing table. The update method replaces
 // the entire table resource, whereas the patch method only replaces fields
 // that are provided in the submitted table resource. This method supports
-// RFC5789 patch semantics.
+// RFC5789 patch semantics. # IAM Permissions Requires the following IAM
+// permission(s) on the table: - `bigquery.tables.update` -
+// `bigquery.tables.get`
 //
 // - datasetId: Dataset ID of the table to update.
 // - projectId: Project ID of the table to update.
@@ -16775,7 +18173,8 @@ type TablesUpdateCall struct {
 
 // Update: Updates information in an existing table. The update method replaces
 // the entire Table resource, whereas the patch method only replaces fields
-// that are provided in the submitted Table resource.
+// that are provided in the submitted Table resource. # IAM Permissions
+// Requires the `bigquery.tables.update` permission on the table.
 //
 // - datasetId: Dataset ID of the table to update.
 // - projectId: Project ID of the table to update.
