@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	credentialsJSONFilePathField = field.StringField(credentialsJSONFilePath, field.WithRequired(true), field.WithDescription("JSON credentials file name for the Google identity platform account."))
+	credentialsJSONFilePathField = field.StringField(credentialsJSONFilePath, field.WithRequired(true), field.WithDescription("Path to a Google BigQuery service-account JSON key file."))
 	configurationFields          = []field.SchemaField{credentialsJSONFilePathField}
 )
 
