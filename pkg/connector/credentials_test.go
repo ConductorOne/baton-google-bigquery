@@ -44,6 +44,41 @@ func TestNewFromJSONBytesRejectsUntrustedConfig(t *testing.T) {
 }
 
 func TestNewFromJSONBytesAcceptsOlderConsoleKey(t *testing.T) {
+	data := olderConsoleKeyJSON(t)
+	client, err := NewFromJSONBytes(context.Background(), data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		client.ProjectsClient.Close()
+		client.BigQueryClient.Close()
+	})
+}
+
+func TestNewAcceptsOlderConsoleKeyFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "credentials.json")
+	if err := os.WriteFile(path, olderConsoleKeyJSON(t), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	client, err := New(context.Background(), path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		client.ProjectsClient.Close()
+		client.BigQueryClient.Close()
+	})
+}
+
+func TestNewRejectsDirectory(t *testing.T) {
+	client, err := New(context.Background(), t.TempDir())
+	if client != nil || err == nil || !strings.Contains(err.Error(), "must be regular") {
+		t.Fatalf("expected regular-file rejection, got client=%v err=%v", client, err)
+	}
+}
+
+func olderConsoleKeyJSON(t *testing.T) []byte {
+	t.Helper()
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		t.Fatal(err)
@@ -58,14 +93,7 @@ func TestNewFromJSONBytesAcceptsOlderConsoleKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, err := NewFromJSONBytes(context.Background(), data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		client.ProjectsClient.Close()
-		client.BigQueryClient.Close()
-	})
+	return data
 }
 
 func TestNewRejectsOversizedCredentialFile(t *testing.T) {

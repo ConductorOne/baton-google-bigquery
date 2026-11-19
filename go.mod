@@ -7,6 +7,7 @@ require (
 	cloud.google.com/go/iam v1.14.0
 	cloud.google.com/go/resourcemanager v1.10.7
 	github.com/conductorone/baton-sdk v0.46.0
+	github.com/conductorone/google-credential-guard v0.1.2
 	github.com/ennyjfrick/ruleguard-logfatal v0.0.2
 	github.com/googleapis/gax-go/v2 v2.27.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -63,7 +64,6 @@ require (
 	github.com/conductorone/dpop v0.4.0 // indirect
 	github.com/conductorone/dpop/integrations/dpop_grpc v0.4.0 // indirect
 	github.com/conductorone/dpop/integrations/dpop_oauth2 v0.4.0 // indirect
-	github.com/conductorone/google-credential-guard v0.1.2 // indirect
 	github.com/deckarep/golang-set/v2 v2.9.0 // indirect
 	github.com/ebitengine/purego v0.11.3 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
